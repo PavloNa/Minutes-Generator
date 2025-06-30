@@ -1,0 +1,13 @@
+.upload-div {
+    overflow: hidden;
+    padding-top: 10%;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+}
+
+#big-upload {
+    width: 10rem;
+    height: 10rem;
+}
