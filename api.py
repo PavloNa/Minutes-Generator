@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, File, UploadFile
 from nlp import main
 
 app = FastAPI()
@@ -7,7 +7,7 @@ app = FastAPI()
 def read_root():
     return {"Hello": "World"}
 
-@app.get("/proccess_transcript")
-def process_transcript():
+@app.post("/proccess_transcript/")
+async def process_transcript(file: UploadFile):
     result = main()
     return result
