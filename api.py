@@ -9,5 +9,7 @@ def read_root():
 
 @app.post("/proccess_transcript/")
 async def process_transcript(file: UploadFile):
-    result = main()
-    return result
+    if file.headers['content-type'] not in ['audio/mpeg', 'text/plain', 'video/mpeg', 'video/mp4']:
+        return {"msg": "File format not authorised."}
+    result = main(filename=file.filename, file=file)
+    return result 

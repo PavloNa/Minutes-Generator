@@ -2,3 +2,6 @@ fastapi[standard]
 transformers
 torch
 spacy
+openai-whisper
+moviepy
+ffmpeg-python
