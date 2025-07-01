@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from nlp import main
 
 app = FastAPI()
 
@@ -8,6 +9,5 @@ def read_root():
 
 @app.get("/proccess_transcript")
 def process_transcript():
-    print("hello")
-    return {"test": "this works!"}
-    ...
+    result = main()
+    return result

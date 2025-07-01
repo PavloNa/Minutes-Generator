@@ -1,0 +1,15 @@
+Good morning, everyone. Let's get started. The main goals today are to review the current sprint progress, address any blockers, and prep for the next release.
+Morning! On the engineering side, we’ve completed 80% of the tasks for Sprint 14. The new data export feature is implemented but needs additional testing for edge cases.
+Yeah, I noticed a couple of issues with exporting large files. The app slows down noticeably. We’ll need to profile performance and possibly optimize the export logic.
+Thanks. Can your team handle performance optimization by Thursday?
+Should be doable. I'll assign it to Emily and check in with her after this call.
+Quick update on my end: the new dashboard design is finalized and ready for handoff. I’ll upload the Figma files by noon today.
+Great. Could you also include mobile mockups in that upload?
+Yes, I'll include those too.
+One more thing – we're missing unit tests for the new user onboarding flow. Can that be added before the QA pass?
+Good catch. I'll add those to our checklist and assign someone today.
+Perfect. Let's aim to freeze features by end of day Friday. Any other concerns?
+No, all good.
+Nothing from me.
+Same here.
+Awesome. I'll share meeting notes and updated sprint board after the call. Thanks, everyone!
