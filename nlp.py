@@ -87,23 +87,32 @@ def generate_minutes(text: str) -> dict[str, str]:
     
     with model.chat_session():
         prompt = f"""
-        You are an AI assistant that generates meeting minutes from a transcript.
-        The minutes should be in the following JSON format:
+        You are a meeting minutes generator. Extract the following fields from the meeting notes below and output strictly in this JSON format (do not add or remove any keys or change the structure):
+
         {{
-            "Summary": "",
-            "Attendees": [{{"Name": ""}}],
-            "Actions": [{{"Action": "", "Person/Team": ""}}],
-            "Agenda": [{{"Topic": "", "Person/Team": ""}}],
-            "Decisions": [{{"Decision": "", "Person/Team": ""}}]
+        "Summary": "",
+        "Attendees": [""],
+        "Actions": [{{"Action": "", "Person/Team": ""}}],
+        "Agenda": [{{"Topic": "", "Person/Team": ""}}],
+        "Decisions": [{{"Decision": "", "Person/Team": ""}}]
         }}
-        Make sure not to change the format of the JSON keys only change the values. Don't make it into a list.
-        Summary is a short summary of the meeting, attendees are the people who attended the meeting, actions are tasks that need to be done, agenda is the topics discussed in the meeting, and decisions are the decisions made during the meeting.
-        Please generate the minutes based on the following transcript:
+
+        Make sure:
+        - "Summary" is a concise summary of the meeting.
+        - "Attendees" is a list of "Name" strings.
+        - "Person/Team" is always a single string, never a list.
+        - Always include all keys, even if some values are empty.
+        - "Agenda" must not have any empty "Topic" fields.
+        - "Decisions" must not have any empty "Decision" fields.
+        - "Actions" must not have any empty "Action" fields.
+        - Do not include any additional explanation or commentary, only the JSON object.
+
+        Generate the minutes based on the following transcript:
         {text}
         """        
         log("Generating minutes from the transcript...", get_line())
         start_time = time.time()
-        response = model.generate(prompt, max_tokens=1024)
+        response = model.generate(prompt, max_tokens=2048)
         log("--- Generation took %s seconds ---" % round(time.time() - start_time, 2), get_line())
         log("Minutes generated successfully. Returning response.", get_line())
         return response
@@ -121,11 +130,13 @@ def main(file) -> dict[str, str]:
     #ADD FILE HANDLING
     text = handle_format(file=file)
     response = generate_minutes(text)
-    response = re.findall(r"```(.*?)```", response, re.DOTALL)
-    response = str(response)[2:-2].replace("\\n", '\n')
-    print(response)
-    json_response = json.loads(response)
-    return json_response
+    try:
+        response = json.loads(response)
+    except json.JSONDecodeError:
+        log("Failed to decode JSON response. Returning raw response.", get_line())
+        # If the response is not valid JSON, return it as is
+        return {"error": "Invalid JSON response from the model."}
+    return response
 
 if __name__ == "__main__":
     main()
