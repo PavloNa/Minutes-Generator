@@ -1,6 +1,8 @@
 import React from 'react';
 import './Upload.css';
 
+const UPLOAD_ENDPOINT = "http://127.0.0.1:8000/proccess_transcript/";
+
 const Upload = () => {
   return (
     <>
