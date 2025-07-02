@@ -2,5 +2,5 @@ fastapi[standard]
 torch
 openai-whisper
 moviepy
-ffmpeg-python
 gpt4all
+gpt4all[cuda]
