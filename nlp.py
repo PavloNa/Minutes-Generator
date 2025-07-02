@@ -122,9 +122,10 @@ def main(file) -> dict[str, str]:
     text = handle_format(file=file)
     response = generate_minutes(text)
     response = re.findall(r"```(.*?)```", response, re.DOTALL)
+    response = str(response)[2:-2].replace("\\n", '\n')
     print(response)
-    print(json.loads(response))
-    return response
+    json_response = json.loads(response)
+    return json_response
 
 if __name__ == "__main__":
     main()
