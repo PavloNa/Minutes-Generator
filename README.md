@@ -82,9 +82,3 @@ OPENAI_API_KEY=your-api-key
 ```
 
 ---
-
-✅ You're now ready to run the script using:
-
-```bash
-python main.py
-```
