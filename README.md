@@ -38,6 +38,7 @@ This tool takes a raw meeting transcript as input and returns a standardized JSO
   "Agenda": [{"Topic": "", "Person/Team": ""}],
   "Decisions": [{"Decision": "", "Person/Team": ""}]
 }
+```
 
 
 ## 📦 Installation
