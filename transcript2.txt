@@ -1,0 +1,29 @@
+Sarah: Hey everyone — let’s jump in. Today we’ll review the Q4 hiring plan, go over the results of the async experiments, and align on the next phase of growth initiatives. We’ll close with updates from each function. Let’s start with recruiting and headcount.
+
+Martin: We’re aiming to add 8–10 folks next quarter — mostly in engineering and customer success. We’re keeping the hiring bar high, especially for senior ICs. One risk: offer acceptance is down slightly — comp benchmarking suggests we may need to revisit some equity bands.
+
+Rachel: Finance has flagged that expanding too fast could push us above our burn ceiling. Our model assumes a 3% growth in spend — we’re already at 4.2% for Q3. That said, the PLG motion is strong — conversion rate is now 8.7% on the freemium tier, and LTV is trending up.
+
+Anjali: Engineering’s async experiment went well. We reduced meetings by 26%, and merged 14% more PRs week-over-week. We’ve started documenting team norms more clearly. We’ll continue with async standups, and we're piloting Loom-based tech specs next sprint.
+
+Laura: Product adopted the async framework too — the feature intake form and Notion roadmaps are helping a lot. We’re prototyping a “Focus Mode” feature for docs — letting users highlight and hide parts of the doc to focus on key content. Targeting early tests by end of month.
+
+David: Research completed 3 concept tests last week — Focus Mode scored high on usability and clarity. We also ran a quick diary study — common pain point: people lose their place in long docs. We’re working on scroll anchoring and context-aware summaries as well.
+
+Julia: Infra is focused on developer experience. We’re rolling out per-branch preview environments — one-click spinups for PRs. We also restructured CI to run 42% faster. Feedback from devs has been positive. Next up: improving staging parity and reducing flakiness in nightly runs.
+
+Leo: Platform started migrating queues to Kafka — early benchmarks are promising. We’re also testing a unified metrics layer for observability. Long term, this could let us retire 2–3 tools and reduce cognitive load across SRE and data teams.
+
+Priya: ML hit a milestone with real-time summarization. Latency is down to 680ms on average. We’ll integrate that into meetings shortly. Also exploring domain adaptation for legal use cases — we’ve fine-tuned models on contract data with great initial results.
+
+Lena: Success had a 94% CSAT score last month. We’re doing quarterly business reviews with top 20 customers. Common themes: better usage insights and more personalized onboarding. We’re partnering with ML to embed usage nudges in-app based on behavior.
+
+Jon: Support volume dropped 11% thanks to better docs and the new self-help flow. Most tickets are now around permissions and sharing workflows — product is aware and has a fix in the backlog. We’re also testing a new escalation path for high-tier accounts.
+
+Karen: Sales had strong inbound this month — mostly legal, consulting, and financial services. We’re investing in vertical-specific sales enablement. Updating objection handling scripts and adding industry-specific demos. Forecast is $1.4M for the quarter.
+
+Ethan: Marketing wrapped up the lead gen campaign — cost per lead down 22%. The content team is writing industry-specific blog posts, and we’re seeing better engagement. Also planning to launch a customer story video series in Q1.
+
+Mira: Legal has no red flags, but we’re reviewing how usage data is stored and logged — especially for high-sensitivity enterprise users. We'll draft revised policies next week and share with product and ML.
+
+Sarah: Great work, everyone. Let’s make sure those hiring decisions are aligned with the financial model. Engineering and product to finalize Focus Mode MVP, ML to deploy summarization API, and platform to continue Kafka rollout. Next meeting in three weeks.

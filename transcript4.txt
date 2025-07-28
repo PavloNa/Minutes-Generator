@@ -1,0 +1,29 @@
+Sarah: Good afternoon, team. Today’s focus is reviewing the alpha launch of the document intelligence module, aligning on OKRs for Q4, and addressing recent incidents flagged in the postmortem. We'll also carve out 10 minutes at the end for cross-functional team updates. Let's keep it tight — we’ve got 45 minutes.
+
+Martin: Thanks Sarah. Starting with the doc intelligence launch — early metrics are encouraging. Engagement is up 28%, especially among enterprise users. We’re seeing strong pickup on the smart highlights and dynamic summaries. There are a few bugs — mostly formatting glitches in PDFs — but nothing blocking. Revenue is tracking 5% above forecast this quarter, with notable expansion from two large healthcare clients.
+
+Rachel: Finance-wise, we’re looking stable. Cash burn’s down 9% thanks to tighter AWS usage controls and reduced contract spending. Still, we need to be cautious — the design team’s tooling costs increased by 17%. We may want to evaluate switching away from some premium Figma plugins. On the flip side, support and infra made great use of open-source tools to cut costs.
+
+Anjali: Engineering shipped 4 out of 6 roadmap items. The async annotation engine was delayed due to a parsing bottleneck, but the graph embedding layer and topic explorer are live. We also hardened the API gateway — downtime dropped by 63%. Q4 priorities are annotation scalability, collaboration features in the doc viewer, and a prototype for “AI Assist” inside the editor.
+
+Laura: Product’s planning a beta rollout for “AI Assist” with 50 design partners in mid-November. We’re working with legal and security on prompt logging and user data boundaries. Feedback from the alpha group suggests we need stronger onboarding — especially for power features. We’re updating tooltips and designing guided walkthroughs this sprint.
+
+David: From research — we just wrapped the AI summary usability study with 20 enterprise users. General satisfaction was high, but interpretability is still a concern. Users want to know why something is being highlighted. We’re now exploring a “why this” explainer module using attention maps from the LLM.
+
+Julia: Infra-wise, the latency for batch processing is down 23%, thanks to the new job queue scheduler. RBAC 2.0 is also in staging now, supporting field-level controls. This unlocks a lot for regulated industries. Final push this quarter is building the cost usage dashboards to give product and finance visibility into per-feature cloud spend.
+
+Leo: Platform's begun migrating storage buckets to the new cold/warm/hot tiering. We expect 12–15% storage savings per month after full rollout. We also automated 3 playbooks for on-call, cutting manual intervention time in half. As for incident response — the root cause of last Friday’s downtime was a stale DNS record. We've patched and added checks.
+
+Priya: ML deployed intent classification into production — it’s currently routing incoming queries with 87% accuracy. We’re also prepping the new summarization v3.3 — it cuts hallucinations by 22% and uses domain-specific tuning. In parallel, we’re experimenting with few-shot extraction for legal clauses — results are promising.
+
+Lena: Customer success launched the new dashboard for tracking user adoption — initial cohort data helped identify 14 high-risk accounts. Outreach already started. We’re also working with support to build in-app banners based on user behavior. We’ve seen a 12% increase in usage of underused features since launch.
+
+Jon: Support volume was flat QoQ — about 2,200 tickets. Major pain points: sync errors in mobile and confusion around permission expiration. Devs are debugging a timing issue in iOS that may be related. Kudos to engineering for jumping on the hotfix so quickly last week.
+
+Karen: Sales closed 8 enterprise deals, including a major pharma group. We’re refining our legal vertical pitch deck, adding case studies and compliance references. There's big interest in clause detection and audit trails. Q4 focus is landing two lighthouse legal clients and partnering with marketing on a webinar series.
+
+Ethan: Marketing saw a 19% boost in paid conversions from the new landing pages. Webinars had good turnout, though drop-off at the 25-minute mark is high — we’ll test shorter formats. SEO is stable, but we want to refresh older blog content with updated value props and examples. Also prepping new explainer videos.
+
+Mira: Legal reviewed the anonymization pipeline for LLM training data — it meets all GDPR and CCPA criteria. For clause detection, we flagged 3 public datasets with problematic licenses. ML has agreed to remove and retrain. No material risks for now, but we’ll continue auditing training sources.
+
+Sarah: Excellent. To recap, key actions: engineering to finalize annotation engine, product to launch AI Assist beta, ML to ship v3.3 and clause detection POC, infra to complete tiered storage rollout, and success/support to double down on onboarding flows. Let’s regroup in 4 weeks. Great work, everyone.

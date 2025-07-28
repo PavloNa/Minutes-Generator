@@ -1,0 +1,29 @@
+Sarah: Let’s get started. Today we’ll focus on GTM alignment, progress on AI roadmap milestones, and QA from the last release. Quick reminder — please update your function dashboards before Friday.
+
+Martin: From a GTM perspective, we’re halfway through the quarter and tracking 94% of our sales goal. Self-serve is outperforming, while enterprise is slightly behind. Top blockers are integration complexity and procurement delays.
+
+Rachel: Burn is on target. We’re running a bit hot on cloud credits — usage has outpaced forecast due to AI workloads. Finance is working with ML and infra on a cost alerting system. We’re also modeling ARR per compute hour to track feature profitability.
+
+Anjali: Engineering finished the feedback ingestion pipeline. It aggregates survey and support data daily and feeds into the product database. We're also rolling out user flags — letting product flag risky users or feature testers for custom flows.
+
+Laura: Product launched the first version of smart digests last week. It’s pulling daily highlights for team spaces. Next up: improving relevance — today it skews toward most active threads, not necessarily the most important ones. Also working on internal tooling for AI prompt testing.
+
+David: On UX research — we just finished a heatmap study of digest interactions. Most clicks are on 1st and 3rd items, rarely on 4th or beyond. We're recommending a “top 3” digest format. Also kicking off diary study for async collaboration features.
+
+Julia: Infra stabilized the alerts system — false positives are down 76%. Also reduced container cold start times by ~300ms. Our new Terraform module standardization is rolling out — 60% coverage so far. Should speed up onboarding and infra-as-code hygiene.
+
+Leo: SRE automated incident tagging and categorization. Now our retros pull directly from structured tags. We’ve had 3 priority-1 incidents this quarter — all mitigated under 10 mins. Platform is planning an offsite to improve observability tooling across teams.
+
+Priya: ML trained v4.0 of the summarizer — smaller and faster, with minimal drop in quality. We’re piloting it on the digests. Also experimenting with retrieval-augmented generation for product Q&A — early evals show 71% accuracy vs. baseline 59%.
+
+Lena: Success is onboarding 6 new enterprise accounts this week. We’ve launched a checklist tool and nudges based on previous success patterns. Our new CSM scorecard is live too — gives visibility into onboarding health and feature adoption.
+
+Jon: Support deployed the Slack bot for internal triage — it's cut down resolution time by 19%. We're also tagging tickets with product area now — feeding that data back into the roadmap process.
+
+Karen: Sales has 4 contracts in legal, 2 in security. We're leaning into pain points around compliance and content sprawl. Next week’s webinar has over 500 registrants — mostly legal ops professionals. Big focus right now is storytelling and differentiation.
+
+Ethan: Content marketing refreshed our docs site — bounce rate dropped by 8%. Running A/B tests on homepage CTA wording. Also launching “Founder AMA” clips on LinkedIn to drive engagement.
+
+Mira: Legal is prepping an internal FAQ for AI usage questions from customers. Also working with sales on redlines related to data sovereignty and retention.
+
+Sarah: That’s a wrap — key actions: finalize digest improvements, ML to test summarizer v4.0, infra to hit 100% on Terraform rollout, and sales/marketing to prep legal GTM campaign. Nice work — let’s keep the momentum going.

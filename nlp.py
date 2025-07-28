@@ -1,11 +1,14 @@
+from sympy import content
 import whisper
 from moviepy import VideoFileClip
 import os
-from gpt4all import GPT4All
 import time
 import re
 from inspect import currentframe, getframeinfo
 import json
+import openai
+
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 class bcolors:
     HEADER = '\033[95m'
@@ -20,7 +23,6 @@ class bcolors:
 
 #Models
 model = whisper.load_model("tiny")
-model = GPT4All("Llama-3.2-3B-Instruct-Q4_0.gguf")
 
 #Variables
 frameinfo = getframeinfo(currentframe())
@@ -85,37 +87,53 @@ def generate_minutes(text: str) -> dict[str, str]:
     """
     log(f"Transcript length: {len(text.split())} words", get_line())
     
-    with model.chat_session():
-        prompt = f"""
-        You are a meeting minutes generator. Extract the following fields from the meeting notes below and output strictly in this JSON format (do not add or remove any keys or change the structure):
+    desired_format = '''
+    {
+    "Summary": "",
+    "Attendees": [{"Name": ""}],
+    "Actions": [{"Action": "", "Person/Team": ""}],
+    "Agenda": [{"Topic": "", "Person/Team": ""}],
+    "Decisions": [{"Decision": "", "Person/Team": ""}]
+    }
+    '''
 
-        {{
-        "Summary": "",
-        "Attendees": [""],
-        "Actions": [{{"Action": "", "Person/Team": ""}}],
-        "Agenda": [{{"Topic": "", "Person/Team": ""}}],
-        "Decisions": [{{"Decision": "", "Person/Team": ""}}]
-        }}
+    transcript = text
 
-        Make sure:
-        - "Summary" is a concise summary of the meeting.
-        - "Attendees" is a list of "Name" strings.
-        - "Person/Team" is always a single string, never a list.
-        - Always include all keys, even if some values are empty.
-        - "Agenda" must not have any empty "Topic" fields.
-        - "Decisions" must not have any empty "Decision" fields.
-        - "Actions" must not have any empty "Action" fields.
-        - Do not include any additional explanation or commentary, only the JSON object.
 
-        Generate the minutes based on the following transcript:
-        {text}
-        """        
-        log("Generating minutes from the transcript...", get_line())
-        start_time = time.time()
-        response = model.generate(prompt, max_tokens=2048)
-        log("--- Generation took %s seconds ---" % round(time.time() - start_time, 2), get_line())
-        log("Minutes generated successfully. Returning response.", get_line())
-        return response
+    prompt = f"""
+    You are a meeting minutes generator. From the transcript below, extract the following fields and respond strictly in this JSON format:
+
+    {desired_format}
+
+    - "Attendees" must be a list of objects with a single "Name" string each.
+    - "Person/Team" must always be a single string, not a list.
+    - Include all keys even if values are empty.
+    - Do NOT explain anything, only return the raw JSON.
+
+    Transcript:
+    \"\"\"
+    {transcript}
+    \"\"\"
+    """
+    log("Generating minutes from the transcript...", get_line())
+    start_time = time.time()
+    response = openai.ChatCompletion.create(
+        model="gpt-4",  # or "gpt-3.5-turbo"
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.2,
+    )
+    content = response["choices"][0]["message"]["content"]
+    log("--- Generation took %s seconds ---" % round(time.time() - start_time, 2), get_line())
+    log("Minutes generated successfully. Returning response.", get_line())
+
+    try:
+        minutes = json.loads(content)
+        print(json.dumps(minutes, indent=2))
+        return minutes
+    except json.JSONDecodeError:
+        print("Raw output (not valid JSON):\n", content)
+        return {"error": "Invalid JSON response from the model."}
+
 
 def open_text():
     """
