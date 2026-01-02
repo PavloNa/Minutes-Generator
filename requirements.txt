@@ -1,7 +1,3 @@
 fastapi[standard]
-torch
 openai-whisper
-moviepy
-gpt4all
-gpt4all[cuda]
 openai
