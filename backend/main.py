@@ -9,21 +9,9 @@ app = FastAPI()
 
 @app.get("/")
 def read_root():
-    return {"Hello": "World"}
-
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: Union[str, None] = None):
-    return {"item_id": item_id, "q": q}
-
-@app.get("/health")
-def health_check():
-    try:
-        database = Database("users")
-    except Exception as e:
-        return {"status": "error", "message": str(e)}
-
     return {"status": "ok"}
 
+# User authentication endpoints
 @app.post("/login")
 def login_user(username: str, password: str):
     success = auth.login(username, password)
@@ -33,6 +21,25 @@ def login_user(username: str, password: str):
     else:
         return {"message": success[1]}
 
+@app.post("/reset_password")
+# TODO: implement email sending functionality
+def reset_password(email: str):
+    success = auth.reset_password(email)
+    if success:
+        return {"message": "Password reset email sent."}
+    else:
+        return {"message": "Failed to send password reset email."}
+
+@app.post("/verify_token")
+def verify_token(token: str):
+    success = auth.verify_token(token)
+    if success[0]:
+        return {"username": success[1]}
+    else:
+        return {"message": "Invalid or expired token"}
+
+
+# User management endpoints
 @app.post("/create_user")
 def register_user(username: str, password: str, email: str):
     success = auth.register(username, password, email)
@@ -50,21 +57,3 @@ def get_user(username: str):
         return {"username": user["username"], "email": user["email"]}
     else:
         return {"message": "User not found"}
-
-@app.post("/reset_password")
-# TODO: implement email sending functionality
-def reset_password(email: str):
-    success = auth.reset_password(email)
-    if success:
-        return {"message": "Password reset email sent."}
-    else:
-        return {"message": "Failed to send password reset email."}
-
-
-@app.post("/verify_token")
-def verify_token(token: str):
-    success = auth.verify_token(token)
-    if success[0]:
-        return {"username": success[1]}
-    else:
-        return {"message": "Invalid or expired token"}
