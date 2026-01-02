@@ -95,7 +95,7 @@ Create a `.env` file in the project root:
 OPENAI_API_KEY=your-openai-api-key
 100_MONGODB_CONNECTION=your-mongodb-connection-string
 101_MONGODB_DATABASE=your-database-name
-JWT_SECRET=your-secret-key-for-jwt
+200_JWT_SECRET=your-secret-key-for-jwt
 ```
 
 ---
