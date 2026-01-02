@@ -1,7 +1,12 @@
 import os
+from os.path import dirname, join
 import pymongo
+from dotenv import load_dotenv
 
-def Database():
+dotenv_path = join(dirname(__file__), '..', '.env')
+load_dotenv(dotenv_path)
+
+class Database:
     def __init__(self, db_collection: str) -> None:
         self.db_url = os.getenv("100_MONGODB_CONNECTION", "")
         self.mydb = os.getenv("101_MONGODB_DATABASE", "")
@@ -19,5 +24,3 @@ def Database():
         return self.client
     def close_connection(self):
         self.client.close()
-    def __del__(self):
-        self.close_connection()
