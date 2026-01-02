@@ -24,21 +24,21 @@ def health_check():
 
     return {"status": "ok"}
 
-@app.post("/register")
-def register_user(username: str, password: str, email: str):
-    success = auth.register(username, password, email)
-    logging.info(f"User registration attempt for {username}: {'successful' if success[0] else 'failed'}")
-    if success[0]:
-        return {"message": f"User {username} registered successfully."}
-    else:
-        return {"message": success[1]}
-
 @app.post("/login")
 def login_user(username: str, password: str):
     success = auth.login(username, password)
     logging.info(f"User login attempt for {username}: {'successful' if success[0] else 'failed'}")
     if success[0]:
         return {"message": success[1]}
+    else:
+        return {"message": success[1]}
+
+@app.post("/create_user")
+def register_user(username: str, password: str, email: str):
+    success = auth.register(username, password, email)
+    logging.info(f"User registration attempt for {username}: {'successful' if success[0] else 'failed'}")
+    if success[0]:
+        return {"message": f"User {username} registered successfully."}
     else:
         return {"message": success[1]}
 
@@ -50,6 +50,16 @@ def get_user(username: str):
         return {"username": user["username"], "email": user["email"]}
     else:
         return {"message": "User not found"}
+
+@app.post("/reset_password")
+# TODO: implement email sending functionality
+def reset_password(email: str):
+    success = auth.reset_password(email)
+    if success:
+        return {"message": "Password reset email sent."}
+    else:
+        return {"message": "Failed to send password reset email."}
+
 
 @app.post("/verify_token")
 def verify_token(token: str):
