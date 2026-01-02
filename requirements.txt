@@ -1,3 +1,7 @@
 fastapi[standard]
 openai-whisper
 openai
+pymongo[srv]
+python-dotenv
+bcrypt
+PyJWT
