@@ -7,11 +7,18 @@ const NavBar = () => {
 <nav className="navbar">
   <div className="navbar-left">
     <a href="/" className="logo">
-      EasyMinutes
+      <svg className="logo-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M9 12H15M9 16H15M17 21H7C5.89543 21 5 20.1046 5 19V5C5 3.89543 5.89543 3 7 3H12.5858C12.851 3 13.1054 3.10536 13.2929 3.29289L18.7071 8.70711C18.8946 8.89464 19 9.149 19 9.41421V19C19 20.1046 18.1046 21 17 21Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M13 3V8C13 8.55228 13.4477 9 14 9H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+      <span className="logo-text">EasyMinutes</span>
     </a>
   </div>
   <div className="navbar-center">
     <ul className="nav-links">
+      <li>
+        <a href="/">Home</a>
+      </li>
       <li>
         <a href="/about">About</a>
       </li>
@@ -21,7 +28,8 @@ const NavBar = () => {
     </ul>
   </div>
   <div className="navbar-right">
-    <button>Upload</button>
+    <button className="btn btn-login">Login</button>
+    <button className="btn btn-register">Register</button>
   </div>
 </nav>
 );
