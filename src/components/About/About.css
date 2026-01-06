@@ -1,0 +1,347 @@
+.about-page {
+  background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16162a 100%);
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Animated background orbs */
+.about-page::before,
+.about-page::after {
+  content: '';
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.4;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.about-page::before {
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, #6366f1 0%, transparent 70%);
+  top: -100px;
+  left: -100px;
+  animation: floatOrb1 20s ease-in-out infinite;
+}
+
+.about-page::after {
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, #a855f7 0%, transparent 70%);
+  bottom: -150px;
+  right: -150px;
+  animation: floatOrb2 25s ease-in-out infinite;
+}
+
+@keyframes floatOrb1 {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  25% {
+    transform: translate(100px, 50px) scale(1.1);
+  }
+  50% {
+    transform: translate(50px, 100px) scale(0.9);
+  }
+  75% {
+    transform: translate(-50px, 50px) scale(1.05);
+  }
+}
+
+@keyframes floatOrb2 {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  25% {
+    transform: translate(-80px, -60px) scale(1.1);
+  }
+  50% {
+    transform: translate(-40px, -120px) scale(0.95);
+  }
+  75% {
+    transform: translate(60px, -80px) scale(1.05);
+  }
+}
+
+/* Third floating orb via extra element */
+.about-bg-orb {
+  position: fixed;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, #22d3ee 0%, transparent 70%);
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.3;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation: floatOrb3 22s ease-in-out infinite;
+  z-index: 0;
+  pointer-events: none;
+}
+
+@keyframes floatOrb3 {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+  33% {
+    transform: translate(-30%, -70%) scale(1.15);
+  }
+  66% {
+    transform: translate(-70%, -30%) scale(0.9);
+  }
+}
+
+.about-container {
+  padding-top: 100px;
+  min-height: 100vh;
+  max-width: 900px;
+  margin: 0 auto;
+  padding-left: 24px;
+  padding-right: 24px;
+  padding-bottom: 60px;
+  position: relative;
+  z-index: 1;
+}
+
+.about-hero {
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+.about-hero h1 {
+  font-size: 2.5rem;
+  color: #fff;
+  margin-bottom: 12px;
+}
+
+.about-tagline {
+  font-size: 1.2rem;
+  color: rgba(255, 255, 255, 0.7);
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.about-content {
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+}
+
+.about-section {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 32px;
+}
+
+.about-section h2 {
+  font-size: 1.5rem;
+  color: #fff;
+  margin-bottom: 20px;
+}
+
+.about-section > p {
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.8;
+  font-size: 1.05rem;
+}
+
+/* How It Works */
+.how-it-works {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.step {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.step-number {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  background: linear-gradient(135deg, #6366f1, #a855f7);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #fff;
+}
+
+.step-content h3 {
+  color: #fff;
+  margin-bottom: 6px;
+  font-size: 0.95rem;
+}
+
+.step-content p {
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.5;
+  font-size: 0.85rem;
+}
+
+/* Features Grid */
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+}
+
+.feature-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  padding: 24px;
+  transition: all 0.3s ease;
+}
+
+.feature-card:hover {
+  background: rgba(99, 102, 241, 0.1);
+  border-color: rgba(99, 102, 241, 0.3);
+  transform: translateY(-2px);
+}
+
+.feature-icon {
+  font-size: 2rem;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.feature-card h3 {
+  color: #fff;
+  font-size: 1rem;
+  margin-bottom: 8px;
+}
+
+.feature-card p {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+/* Contact Section */
+.contact-section {
+  text-align: center;
+}
+
+.contact-intro {
+  margin-bottom: 28px;
+}
+
+.contact-links {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.contact-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 28px;
+  border-radius: 12px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.contact-icon {
+  width: 22px;
+  height: 22px;
+}
+
+.contact-link.github {
+  background: #24292e;
+  color: #fff;
+  border: 1px solid #444;
+}
+
+.contact-link.github:hover {
+  background: #2f363d;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+.contact-link.email {
+  background: linear-gradient(135deg, #ea4335, #d93025);
+  color: #fff;
+}
+
+.contact-link.email:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(234, 67, 53, 0.4);
+}
+
+.contact-link.linkedin {
+  background: #0077b5;
+  color: #fff;
+}
+
+.contact-link.linkedin:hover {
+  background: #006097;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 119, 181, 0.4);
+}
+
+/* Tech Stack */
+.tech-stack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+}
+
+.tech-badge {
+  background: rgba(99, 102, 241, 0.15);
+  color: #a5b4fc;
+  padding: 8px 18px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+/* Footer */
+.about-footer {
+  text-align: center;
+  margin-top: 48px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.about-footer p {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.95rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .about-hero h1 {
+    font-size: 2rem;
+  }
+
+  .about-section {
+    padding: 24px;
+  }
+
+  .contact-links {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .contact-link {
+    width: 100%;
+    max-width: 280px;
+    justify-content: center;
+  }
+}

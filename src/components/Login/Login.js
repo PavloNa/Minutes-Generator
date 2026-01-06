@@ -55,7 +55,7 @@ function Login() {
   return (
     <div className="login-container">
       <a className="login-logo">
-        <img src={logo} alt="EasyMinutes" />
+        <img src={logo} alt="Minutes Generator" />
       </a>
       <div className="login-box">
         <h2>{isRegister ? 'Register' : 'Login'}</h2>

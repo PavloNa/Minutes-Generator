@@ -4,6 +4,8 @@ import './App.css';
 import Main from './components/Main/Main';
 import Login from './components/Login/Login';
 import Profile from './components/Profile/Profile';
+import Files from './components/Files/Files';
+import About from './components/About/About';
 import { isLoggedIn } from './useAPI';
 
 function ProtectedRoute({ children }) {
@@ -32,7 +34,9 @@ function App() {
       <div className='App-header'>
         <Routes>
           <Route path="/" element={<ProtectedRoute><Main /></ProtectedRoute>} />
+          <Route path="/files" element={<ProtectedRoute><Files /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+          <Route path="/about" element={<About />} />
           <Route path="/login" element={<Login />} />
         </Routes>
       </div>

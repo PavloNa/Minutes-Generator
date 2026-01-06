@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './NavBar.css';
-import logo from '../../images/logo.png';
 import { getStoredToken, verifyToken, logout } from '../../useAPI';
 
 const NavBar = () => {
@@ -28,38 +27,22 @@ const NavBar = () => {
   };
 
   return (
-
-<nav className="navbar">
-  <div className="navbar-left">
-    <a href="/" className="logo">
-      <img src={logo} alt="EasyMinutes" className="logo-icon" />
-    </a>
-  </div>
-  <div className="navbar-center">
-    <ul className="nav-links">
-      <li>
-        <a href="/about">About</a>
-      </li>
-      <li>
-        <a href="/contact">Contact</a>
-      </li>
-    </ul>
-  </div>
-  <div className="navbar-right">
-    {isLoggedIn ? (
-      <>
-        <span className="profile-link" onClick={() => navigate('/profile')}>Profile</span>
-        <button className="btn btn-logout" onClick={handleLogout}>Logout</button>
-      </>
-    ) : (
-      <>
-        <button className="btn btn-login" onClick={() => navigate('/login')}>Login</button>
-        <button className="btn btn-register" onClick={() => navigate('/login')}>Register</button>
-      </>
-    )}
-  </div>
-</nav>
-);
+    <nav className="floating-header">
+      {isLoggedIn && (
+        <div className="floating-nav">
+          <button className="floating-text-btn" onClick={() => navigate('/')}>Home</button>
+          <button className="floating-text-btn" onClick={() => navigate('/files')}>Files</button>
+          <button className="floating-text-btn" onClick={() => navigate('/profile')}>Profile</button>
+          <button className="floating-text-btn logout" onClick={handleLogout}>Logout</button>
+        </div>
+      )}
+      {!isLoggedIn && (
+        <div className="floating-nav">
+          <button className="floating-btn" onClick={() => navigate('/login')}>Login</button>
+        </div>
+      )}
+    </nav>
+  );
 };
 
 export default NavBar;

@@ -5,3 +5,5 @@ pymongo[srv]
 python-dotenv
 bcrypt
 PyJWT
+reportlab
+mutagen

@@ -125,7 +125,8 @@ export const getUser = async () => {
         success: true, 
         username: data.username, 
         email: data.email,
-        ai_config: data.ai_config || { ai_provider: 'OpenAI', api_key: '' }
+        ai_config: data.ai_config || { ai_provider: 'OpenAI', api_key: '' },
+        stats: data.stats || { characters_processed: 0, audio_seconds_processed: 0, transcripts_generated: 0 }
       };
     } else {
       return { success: false, error: data.message || 'Failed to get user' };
@@ -158,6 +159,143 @@ export const updateUser = async (data) => {
     }
   } catch (error) {
     console.error('Update user error:', error);
+    return { success: false, error: 'Network error. Please try again.' };
+  }
+};
+
+export const processTranscript = async ({ text, file }) => {
+  const token = getStoredToken();
+  if (!token) return { success: false, error: 'Not logged in' };
+
+  try {
+    const formData = new FormData();
+    formData.append('token', token);
+    
+    if (file) {
+      formData.append('file', file);
+    } else if (text) {
+      formData.append('transcript_text', text);
+    } else {
+      return { success: false, error: 'No transcript or file provided' };
+    }
+
+    const response = await fetch(`${API_BASE_URL}/process_transcript`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+      return { success: true, minutes: result.minutes, transcriptLength: result.transcript_length };
+    } else {
+      return { success: false, error: result.message || 'Processing failed' };
+    }
+  } catch (error) {
+    console.error('Process transcript error:', error);
+    return { success: false, error: 'Network error. Please try again.' };
+  }
+};
+
+export const getPdfTemplates = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/pdf_templates`, {
+      method: 'GET',
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      return { success: true, templates: data.templates };
+    } else {
+      return { success: false, error: 'Failed to get templates' };
+    }
+  } catch (error) {
+    console.error('Get templates error:', error);
+    return { success: false, error: 'Network error. Please try again.' };
+  }
+};
+
+export const createPdf = async ({ template, minutes, filename }) => {
+  const token = getStoredToken();
+  if (!token) return { success: false, error: 'Not logged in' };
+
+  try {
+    const formData = new FormData();
+    formData.append('token', token);
+    formData.append('template', template);
+    formData.append('minutes', JSON.stringify(minutes));
+    formData.append('filename', filename);
+
+    const response = await fetch(`${API_BASE_URL}/create_pdf`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+      return { 
+        success: true, 
+        message: result.message,
+        pdfData: result.pdf_data,
+        filename: result.filename
+      };
+    } else {
+      return { success: false, error: result.message || 'Failed to create PDF' };
+    }
+  } catch (error) {
+    console.error('Create PDF error:', error);
+    return { success: false, error: 'Network error. Please try again.' };
+  }
+};
+
+export const getUserFiles = async () => {
+  const token = getStoredToken();
+  if (!token) return { success: false, error: 'Not logged in' };
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/get_user_files?token=${encodeURIComponent(token)}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      return { success: true, files: data.files };
+    } else {
+      return { success: false, error: data.message || 'Failed to get files' };
+    }
+  } catch (error) {
+    console.error('Get user files error:', error);
+    return { success: false, error: 'Network error. Please try again.' };
+  }
+};
+
+export const getFile = async (filename) => {
+  const token = getStoredToken();
+  if (!token) return { success: false, error: 'Not logged in' };
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/get_file?token=${encodeURIComponent(token)}&filename=${encodeURIComponent(filename)}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      return { success: true, data: data.data, filename: data.filename };
+    } else {
+      return { success: false, error: data.message || 'Failed to get file' };
+    }
+  } catch (error) {
+    console.error('Get file error:', error);
     return { success: false, error: 'Network error. Please try again.' };
   }
 };
