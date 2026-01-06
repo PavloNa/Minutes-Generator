@@ -7,7 +7,7 @@ function Footer() {
     <footer className="footer">
       <div className="footer-content">
         <div className="footer-section">
-          <h4>EasyMinutes</h4>
+          <h4>Minutes Generator</h4>
           <p>Transform your meeting recordings into professional minutes in seconds.</p>
         </div>
         

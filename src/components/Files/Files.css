@@ -10,10 +10,12 @@
 }
 
 .files-container {
-  max-width: 1200px;
+  max-width: 1400px;
+  width: 100%;
   margin: 0 auto;
   padding: 2rem;
-  padding-top: 120px;
+  padding-top: 80px;
+  box-sizing: border-box;
 }
 
 .files-header {
@@ -124,8 +126,9 @@
 /* Files Grid */
 .files-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 1.25rem;
+  width: 100%;
 }
 
 .file-card {
@@ -370,6 +373,7 @@
 @media (max-width: 768px) {
   .files-container {
     padding: 1rem;
+    padding-top: 70px;
   }
 
   .files-grid {

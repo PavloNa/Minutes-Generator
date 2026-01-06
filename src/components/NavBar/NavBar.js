@@ -28,29 +28,26 @@ const NavBar = () => {
   };
 
   return (
-
-<nav className="navbar">
-  <div className="navbar-left">
-    <a href="/" className="logo">
-      <img src={logo} alt="EasyMinutes" className="logo-icon" />
-    </a>
-  </div>
-  <div className="navbar-right">
-    {isLoggedIn ? (
-      <>
-        <span className="nav-link" onClick={() => navigate('/files')}>My Files</span>
-        <span className="nav-link" onClick={() => navigate('/profile')}>Profile</span>
-        <button className="btn btn-logout" onClick={handleLogout}>Logout</button>
-      </>
-    ) : (
-      <>
-        <button className="btn btn-login" onClick={() => navigate('/login')}>Login</button>
-        <button className="btn btn-register" onClick={() => navigate('/login')}>Register</button>
-      </>
-    )}
-  </div>
-</nav>
-);
+    <>
+      <a href="/" className="corner-logo">
+        <img src={logo} alt="Minutes Generator" />
+      </a>
+      <nav className="floating-header">
+        {isLoggedIn && (
+          <div className="floating-nav">
+            <button className="floating-text-btn" onClick={() => navigate('/files')}>Files</button>
+            <button className="floating-text-btn" onClick={() => navigate('/profile')}>Profile</button>
+            <button className="floating-text-btn logout" onClick={handleLogout}>Logout</button>
+          </div>
+        )}
+        {!isLoggedIn && (
+          <div className="floating-nav">
+            <button className="floating-btn" onClick={() => navigate('/login')}>Login</button>
+          </div>
+        )}
+      </nav>
+    </>
+  );
 };
 
 export default NavBar;
