@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Profile.css';
 import NavBar from '../NavBar/NavBar';
+import Footer from '../Footer/Footer';
 import { getUser, updateUser } from '../../useAPI';
 
 const AI_PROVIDERS = [
@@ -58,17 +59,18 @@ function Profile() {
 
   if (loading) {
     return (
-      <>
+      <div className="profile-page-wrapper">
         <NavBar />
         <div className="profile-container">
           <div className="loading-spinner"></div>
         </div>
-      </>
+        <Footer />
+      </div>
     );
   }
 
   return (
-    <>
+    <div className="profile-page-wrapper">
       <NavBar />
       <div className="profile-container">
         <div className="profile-box">
@@ -150,7 +152,8 @@ function Profile() {
           </form>
         </div>
       </div>
-    </>
+      <Footer />
+    </div>
   );
 }
 

@@ -153,7 +153,7 @@
   box-shadow: 0 6px 20px rgba(10, 202, 255, 0.4);
 }
 
-.navbar-right .profile-link {
+.navbar-right .nav-link {
   color: #333;
   font-weight: 600;
   font-size: 0.95rem;
@@ -164,7 +164,7 @@
   transition: all 0.3s ease;
 }
 
-.navbar-right .profile-link:hover {
+.navbar-right .nav-link:hover {
   background: rgba(10, 202, 255, 0.2);
   transform: translateY(-1px);
 }

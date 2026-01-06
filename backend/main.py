@@ -73,10 +73,16 @@ def get_user(token: str):
     user = db.find_one({"username": username})
     if user:
         ai_config = user.get("ai_config", {"ai_provider": "OpenAI", "api_key": ""})
+        stats = user.get("stats", {
+            "characters_processed": 0,
+            "audio_seconds_processed": 0,
+            "transcripts_generated": 0
+        })
         return {
             "username": user["username"],
             "email": user["email"],
-            "ai_config": ai_config
+            "ai_config": ai_config,
+            "stats": stats
         }
     else:
         return {"message": "User not found"}
@@ -159,11 +165,26 @@ async def process_transcript(
 
     # Return result
     if result.get("success"):
+        # Update user statistics
+        transcript_length = result.get("transcript_length", 0)
+        audio_duration = result.get("audio_duration", 0)  # in seconds
+        
+        db.update_one(
+            {"username": username},
+            {
+                "$inc": {
+                    "stats.characters_processed": transcript_length,
+                    "stats.audio_seconds_processed": audio_duration,
+                    "stats.transcripts_generated": 1
+                }
+            }
+        )
+        
         return {
             "success": True,
             "minutes": result["minutes"],
             "transcript": result.get("transcript", ""),
-            "transcript_length": result.get("transcript_length", 0)
+            "transcript_length": transcript_length
         }
     else:
         return {"success": False, "message": result.get("error", "Processing failed")}

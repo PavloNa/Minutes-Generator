@@ -1,6 +1,38 @@
 import logging
+import tempfile
+import os
 from ai_providers import OpenAIProvider
 from ai_providers.base import BaseProvider
+
+# Try to import mutagen for audio duration detection
+try:
+    from mutagen import File as MutagenFile
+    HAS_MUTAGEN = True
+except ImportError:
+    HAS_MUTAGEN = False
+
+
+def get_audio_duration(file_content: bytes, filename: str) -> float:
+    """Get audio duration in seconds using mutagen."""
+    if not HAS_MUTAGEN:
+        return 0.0
+    
+    try:
+        suffix = os.path.splitext(filename)[1]
+        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as temp_file:
+            temp_file.write(file_content)
+            temp_path = temp_file.name
+        
+        try:
+            audio = MutagenFile(temp_path)
+            if audio and audio.info:
+                return audio.info.length
+        finally:
+            os.unlink(temp_path)
+    except Exception as e:
+        logging.warning(f"Could not get audio duration: {e}")
+    
+    return 0.0
 
 
 class AI:
@@ -40,6 +72,9 @@ class AI:
             dict with meeting minutes in JSON format
         """
         try:
+            # Get audio duration before processing
+            audio_duration = get_audio_duration(file_content, filename)
+            
             # Step 1: Transcribe audio
             transcript = self.provider.transcribe_audio(file_content, filename)
 
@@ -53,7 +88,8 @@ class AI:
                 "success": True,
                 "minutes": minutes,
                 "transcript": transcript,
-                "transcript_length": len(transcript)
+                "transcript_length": len(transcript),
+                "audio_duration": audio_duration
             }
 
         except Exception as e:

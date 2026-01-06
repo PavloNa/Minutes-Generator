@@ -125,7 +125,8 @@ export const getUser = async () => {
         success: true, 
         username: data.username, 
         email: data.email,
-        ai_config: data.ai_config || { ai_provider: 'OpenAI', api_key: '' }
+        ai_config: data.ai_config || { ai_provider: 'OpenAI', api_key: '' },
+        stats: data.stats || { characters_processed: 0, audio_seconds_processed: 0, transcripts_generated: 0 }
       };
     } else {
       return { success: false, error: data.message || 'Failed to get user' };

@@ -18,6 +18,17 @@
   }
 }
 
+/* Page wrapper for footer positioning */
+.profile-page-wrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.profile-page-wrapper > .profile-container {
+  flex: 1;
+}
+
 .loading-spinner {
   width: 48px;
   height: 48px;

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NavBar from '../NavBar/NavBar';
+import Footer from '../Footer/Footer';
 import Upload from '../Upload/Upload';
-import { getUser, getPdfTemplates, createPdf } from '../../useAPI';
+import { getUser, getPdfTemplates, createPdf, getUserFiles } from '../../useAPI';
 import './Main.css';
 
 function Main() {
@@ -17,6 +18,8 @@ function Main() {
   const [pdfError, setPdfError] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [editedMinutes, setEditedMinutes] = useState(null);
+  const [filesCount, setFilesCount] = useState(0);
+  const [userStats, setUserStats] = useState(null);
   // Modal states
   const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [showPdfModal, setShowPdfModal] = useState(false);
@@ -28,11 +31,17 @@ function Main() {
       if (userResult.success) {
         const apiKey = userResult.ai_config?.api_key;
         setHasApiKey(apiKey && apiKey.trim() !== '');
+        setUserStats(userResult.stats);
       }
       
       const templateResult = await getPdfTemplates();
       if (templateResult.success) {
         setTemplates(templateResult.templates);
+      }
+
+      const filesResult = await getUserFiles();
+      if (filesResult.success) {
+        setFilesCount(filesResult.files?.length || 0);
       }
       
       setLoading(false);
@@ -199,7 +208,7 @@ function Main() {
   };
 
   return (
-    <>
+    <div className="main-page-wrapper">
       <NavBar />
       {!loading && !hasApiKey && (
         <div className="api-setup-banner">
@@ -212,6 +221,28 @@ function Main() {
       {!loading && !generatedMinutes && (
         <div className="main-content">
           <Upload disabled={!hasApiKey} onMinutesGenerated={handleMinutesGenerated} />
+          {(filesCount > 0 || userStats?.characters_processed > 0) && (
+            <div className="stats-banner" onClick={() => navigate('/files')}>
+              <div className="stats-icon">📊</div>
+              <div className="stats-content">
+                <div className="stats-item">
+                  <span className="stats-value highlight">{filesCount}</span>
+                  <span className="stats-label">PDFs Created</span>
+                </div>
+                <div className="stats-divider"></div>
+                <div className="stats-item">
+                  <span className="stats-value">{userStats?.characters_processed?.toLocaleString() || 0}</span>
+                  <span className="stats-label">Characters Processed</span>
+                </div>
+                <div className="stats-divider"></div>
+                <div className="stats-item">
+                  <span className="stats-value">{Math.round((userStats?.audio_seconds_processed || 0) / 60)}</span>
+                  <span className="stats-label">Audio Minutes</span>
+                </div>
+              </div>
+              <div className="stats-action">View Files →</div>
+            </div>
+          )}
         </div>
       )}
       
@@ -546,7 +577,8 @@ function Main() {
           </div>
         </div>
       )}
-    </>
+      {!loading && <Footer />}
+    </div>
   );
 }
 

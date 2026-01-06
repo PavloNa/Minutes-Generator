@@ -35,20 +35,11 @@ const NavBar = () => {
       <img src={logo} alt="EasyMinutes" className="logo-icon" />
     </a>
   </div>
-  <div className="navbar-center">
-    <ul className="nav-links">
-      <li>
-        <a href="/about">About</a>
-      </li>
-      <li>
-        <a href="/contact">Contact</a>
-      </li>
-    </ul>
-  </div>
   <div className="navbar-right">
     {isLoggedIn ? (
       <>
-        <span className="profile-link" onClick={() => navigate('/profile')}>Profile</span>
+        <span className="nav-link" onClick={() => navigate('/files')}>My Files</span>
+        <span className="nav-link" onClick={() => navigate('/profile')}>Profile</span>
         <button className="btn btn-logout" onClick={handleLogout}>Logout</button>
       </>
     ) : (
