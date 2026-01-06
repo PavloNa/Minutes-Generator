@@ -1,8 +1,8 @@
-from typing import Union
+from typing import Union, Dict, Any
 import logging
 from database import Database
 from authentication import Authentication
-from fastapi import FastAPI
+from fastapi import FastAPI, Body
 from fastapi.middleware.cors import CORSMiddleware
 
 auth = Authentication()
@@ -69,16 +69,17 @@ def get_user(token: str):
     db = Database("users").get_collection()
     user = db.find_one({"username": username})
     if user:
+        ai_config = user.get("ai_config", {"ai_provider": "OpenAI", "api_key": ""})
         return {
             "username": user["username"],
             "email": user["email"],
-            "openai_api_key": user.get("openai_api_key", "")
+            "ai_config": ai_config
         }
     else:
         return {"message": "User not found"}
 
 @app.post("/update_user")
-def update_user(token: str, openai_api_key: str = None):
+def update_user(token: str, data: Dict[str, Any] = Body(...)):
     verified = auth.verify_token(token)
     if not verified[0]:
         return {"message": "Invalid or expired token"}
@@ -86,15 +87,19 @@ def update_user(token: str, openai_api_key: str = None):
     username = verified[1]
     db = Database("users").get_collection()
 
-    update_data = {}
-    if openai_api_key is not None:
-        update_data["openai_api_key"] = openai_api_key
+    user = db.find_one({"username": username})
+    if not user:
+        return {"message": "User not found"}
+
+    # Don't allow updating sensitive fields
+    protected_fields = ["username", "username_lower", "password", "_id"]
+    update_data = {k: v for k, v in data.items() if k not in protected_fields}
 
     if not update_data:
-        return {"message": "No data to update"}
+        return {"message": "No valid data to update"}
 
     result = db.update_one({"username": username}, {"$set": update_data})
-    if result.modified_count > 0:
+    if result.modified_count > 0 or result.matched_count > 0:
         return {"message": "User updated successfully"}
     else:
-        return {"message": "User not found or no changes made"}
+        return {"message": "Failed to update user"}

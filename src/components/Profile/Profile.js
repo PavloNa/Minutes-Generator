@@ -4,8 +4,16 @@ import './Profile.css';
 import NavBar from '../NavBar/NavBar';
 import { getUser, updateUser } from '../../useAPI';
 
+const AI_PROVIDERS = [
+  { value: 'OpenAI', label: 'OpenAI', enabled: true },
+  { value: 'Anthropic', label: 'Anthropic', enabled: false },
+  { value: 'Google', label: 'Google Gemini', enabled: false },
+  { value: 'Mistral', label: 'Mistral', enabled: false },
+];
+
 function Profile() {
   const [username, setUsername] = useState('');
+  const [aiProvider, setAiProvider] = useState('OpenAI');
   const [apiKey, setApiKey] = useState('');
   const [showApiKey, setShowApiKey] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -19,7 +27,8 @@ function Profile() {
       const result = await getUser();
       if (result.success) {
         setUsername(result.username);
-        setApiKey(result.openai_api_key || '');
+        setAiProvider(result.ai_config?.ai_provider || 'OpenAI');
+        setApiKey(result.ai_config?.api_key || '');
       }
       setLoading(false);
     };
@@ -32,7 +41,12 @@ function Profile() {
     setMessage('');
     setError('');
 
-    const result = await updateUser(apiKey);
+    const result = await updateUser({
+      ai_config: {
+        ai_provider: aiProvider,
+        api_key: apiKey
+      }
+    });
     
     if (result.success) {
       setMessage('Settings saved successfully!');
@@ -73,21 +87,41 @@ function Profile() {
           
           <form onSubmit={handleSave}>
             <div className="form-section">
-              <h3>API Configuration</h3>
+              <h3>AI Configuration</h3>
               <p className="section-description">
-                Enter your OpenAI API key to enable AI-powered meeting minutes generation.
+                Select your AI provider and enter your API key to enable AI-powered meeting minutes generation.
                 Your key is stored securely and never shared.
               </p>
               
               <div className="form-group">
-                <label htmlFor="apiKey">OpenAI API Key</label>
+                <label htmlFor="aiProvider">AI Provider</label>
+                <select
+                  id="aiProvider"
+                  value={aiProvider}
+                  onChange={(e) => setAiProvider(e.target.value)}
+                  className="provider-select"
+                >
+                  {AI_PROVIDERS.map((provider) => (
+                    <option 
+                      key={provider.value} 
+                      value={provider.value}
+                      disabled={!provider.enabled}
+                    >
+                      {provider.label}{!provider.enabled ? ' (Coming Soon)' : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="apiKey">{aiProvider} API Key</label>
                 <div className="api-key-input">
                   <input
                     type={showApiKey ? 'text' : 'password'}
                     id="apiKey"
                     value={apiKey}
                     onChange={(e) => setApiKey(e.target.value)}
-                    placeholder="sk-proj-..."
+                    placeholder={aiProvider === 'OpenAI' ? 'sk-proj-...' : 'Enter your API key'}
                   />
                   <button
                     type="button"
@@ -98,7 +132,9 @@ function Profile() {
                   </button>
                 </div>
                 <p className="api-help">
-                  Don't have an API key? <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer">Get one from OpenAI →</a>
+                  {aiProvider === 'OpenAI' && (
+                    <>Don't have an API key? <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer">Get one from OpenAI →</a></>
+                  )}
                 </p>
               </div>
             </div>

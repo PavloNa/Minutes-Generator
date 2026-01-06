@@ -125,7 +125,7 @@ export const getUser = async () => {
         success: true, 
         username: data.username, 
         email: data.email,
-        openai_api_key: data.openai_api_key || ''
+        ai_config: data.ai_config || { ai_provider: 'OpenAI', api_key: '' }
       };
     } else {
       return { success: false, error: data.message || 'Failed to get user' };
@@ -136,24 +136,25 @@ export const getUser = async () => {
   }
 };
 
-export const updateUser = async (openaiApiKey) => {
+export const updateUser = async (data) => {
   const token = getStoredToken();
   if (!token) return { success: false, error: 'Not logged in' };
 
   try {
-    const response = await fetch(`${API_BASE_URL}/update_user?token=${encodeURIComponent(token)}&openai_api_key=${encodeURIComponent(openaiApiKey)}`, {
+    const response = await fetch(`${API_BASE_URL}/update_user?token=${encodeURIComponent(token)}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
+      body: JSON.stringify(data),
     });
 
-    const data = await response.json();
+    const result = await response.json();
 
-    if (response.ok && data.message && data.message.includes('successfully')) {
-      return { success: true, message: data.message };
+    if (response.ok && result.message && result.message.includes('successfully')) {
+      return { success: true, message: result.message };
     } else {
-      return { success: false, error: data.message || 'Update failed' };
+      return { success: false, error: result.message || 'Update failed' };
     }
   } catch (error) {
     console.error('Update user error:', error);

@@ -5,7 +5,7 @@ import logo from '../../images/logo.png';
 import { getStoredToken, verifyToken, logout } from '../../useAPI';
 
 const NavBar = () => {
-  const [username, setUsername] = useState(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -14,7 +14,7 @@ const NavBar = () => {
       if (token) {
         const result = await verifyToken(token);
         if (result.success) {
-          setUsername(result.username);
+          setIsLoggedIn(true);
         }
       }
     };
@@ -23,7 +23,7 @@ const NavBar = () => {
 
   const handleLogout = () => {
     logout();
-    setUsername(null);
+    setIsLoggedIn(false);
     navigate('/login');
   };
 
@@ -46,9 +46,9 @@ const NavBar = () => {
     </ul>
   </div>
   <div className="navbar-right">
-    {username ? (
+    {isLoggedIn ? (
       <>
-        <span className="username-display" onClick={() => navigate('/profile')}>{username}</span>
+        <span className="profile-link" onClick={() => navigate('/profile')}>Profile</span>
         <button className="btn btn-logout" onClick={handleLogout}>Logout</button>
       </>
     ) : (
