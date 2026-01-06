@@ -10,7 +10,7 @@
   justify-content: space-between;
   align-items: center;
   color: #0acaff;
-  padding: 0.75rem 2rem;
+  padding: 0.5rem 2rem;
   width: 90%;
   max-width: 1200px;
   border-radius: 50px;
@@ -46,10 +46,15 @@
 }
 
 .navbar-left .logo .logo-icon {
-  width: 28px;
-  height: 28px;
-  color: #0acaff;
-  transition: color 0.3s ease;
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+  transition: transform 0.3s ease;
+  margin: -10px 0;
+}
+
+.navbar-left .logo:hover .logo-icon {
+  transform: scale(1.05);
 }
 
 .navbar-left .logo .logo-text {
@@ -133,6 +138,34 @@
 .navbar-right .btn-register:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(10, 202, 255, 0.4);
+}
+
+.navbar-right .username-display {
+  color: #333;
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 0.5rem 1rem;
+  background: rgba(10, 202, 255, 0.1);
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.navbar-right .username-display:hover {
+  background: rgba(10, 202, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.navbar-right .btn-logout {
+  background: transparent;
+  color: #666;
+  border-color: #ccc;
+}
+
+.navbar-right .btn-logout:hover {
+  background: rgba(0, 0, 0, 0.05);
+  border-color: #999;
+  color: #333;
 }
 
 @media (max-width: 768px) {

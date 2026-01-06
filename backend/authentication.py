@@ -36,17 +36,19 @@ class Authentication:
         except jwt.InvalidTokenError:
             return (False, None)
 
-    def login(self, username: str, password: str) -> tuple[bool, str]:
-        user = db.find_one({"username": username})
+    def login(self, username_or_email: str, password: str) -> tuple[bool, str]:
+        # Try to find user by username or email (case-insensitive)
+        search_lower = username_or_email.lower()
+        user = db.find_one({"$or": [{"username_lower": search_lower}, {"email": search_lower}]})
         dummy_hash = bcrypt.hashpw(b"dummy", bcrypt.gensalt())
         stored_hash = user.get("password") if user else None
 
         if stored_hash and bcrypt.checkpw(password.encode('utf-8'), stored_hash):
-            token = self.create_token(username)
+            token = self.create_token(user["username"])
             return (True, token)
         else:
             bcrypt.checkpw(password.encode('utf-8'), dummy_hash)
-            return (False, "Invalid username or password.")
+            return (False, "Invalid username/email or password.")
 
     def register(self, username: str, password: str, email: str) -> tuple[bool, str]:
         # Check format of email and password strength
@@ -57,9 +59,19 @@ class Authentication:
 
         password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
 
-        user_data = {"username": username, "password": password_hash, "email": email}
-        if db.find_one({"username": username}):
+        # Store original username but also store lowercase version for case-insensitive uniqueness
+        user_data = {
+            "username": username,
+            "username_lower": username.lower(),
+            "password": password_hash,
+            "email": email.lower()
+        }
+        # Check for existing username (case-insensitive)
+        if db.find_one({"username_lower": username.lower()}):
             return (False, "Username already exists.")
+        # Check for existing email (case-insensitive)
+        if db.find_one({"email": email.lower()}):
+            return (False, "Email already exists.")
         try:
             db.insert_one(user_data)
             return (True, "User registered successfully.")
