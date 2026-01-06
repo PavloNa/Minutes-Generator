@@ -1,18 +1,51 @@
 import React, { useState, useRef } from 'react';
 import './Upload.css';
+import { processTranscript } from '../../useAPI';
 
 const ACCEPTED_TYPES = {
   audio: ['audio/mpeg', 'audio/wav', 'audio/ogg', 'audio/mp3', 'audio/m4a', 'audio/webm'],
   text: ['text/plain']
 };
 
-const Upload = ({ disabled = false }) => {
+const Upload = ({ disabled = false, onMinutesGenerated }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [files, setFiles] = useState([]);
   const [error, setError] = useState('');
   const [inputMode, setInputMode] = useState('file'); // 'file' or 'text'
   const [transcriptText, setTranscriptText] = useState('');
+  const [processing, setProcessing] = useState(false);
   const fileInputRef = useRef(null);
+
+  const handleGenerate = async () => {
+    setProcessing(true);
+    setError('');
+    
+    let result;
+    
+    if (inputMode === 'file' && files.length > 0) {
+      // Process first file (for now, single file)
+      result = await processTranscript({ file: files[0] });
+    } else if (inputMode === 'text' && transcriptText.trim()) {
+      result = await processTranscript({ text: transcriptText });
+    } else {
+      setError('No content to process');
+      setProcessing(false);
+      return;
+    }
+    
+    if (result.success) {
+      if (onMinutesGenerated) {
+        onMinutesGenerated(result.minutes);
+      }
+      // Clear after successful generation
+      setFiles([]);
+      setTranscriptText('');
+    } else {
+      setError(result.error || 'Failed to generate minutes');
+    }
+    
+    setProcessing(false);
+  };
 
   const isValidFile = (file) => {
     const allAccepted = [...ACCEPTED_TYPES.audio, ...ACCEPTED_TYPES.text];
@@ -131,7 +164,12 @@ const Upload = ({ disabled = false }) => {
           </div>
           <p className="upload-description">Drop in a transcript file to generate a PDF</p>
 
-          {error && <p className="upload-error">{error}</p>}
+          {error && (
+            <div className="upload-error">
+              <span className="upload-error-icon">⚠️</span>
+              <p className="upload-error-text">{error}</p>
+            </div>
+          )}
 
           {files.length > 0 && !disabled && (
             <div className="files-list">
@@ -146,7 +184,9 @@ const Upload = ({ disabled = false }) => {
                   <button className="file-remove" onClick={() => removeFile(index)}>×</button>
                 </div>
               ))}
-              <button className="upload-btn">Generate Minutes</button>
+              <button className="upload-btn" onClick={handleGenerate} disabled={processing}>
+                {processing ? 'Processing...' : 'Generate Minutes'}
+              </button>
             </div>
           )}
         </>
@@ -160,13 +200,24 @@ const Upload = ({ disabled = false }) => {
               onChange={(e) => setTranscriptText(e.target.value)}
               disabled={disabled}
             />
+            <div className="textarea-footer">
+              <span className="char-count">{transcriptText.length.toLocaleString()} characters</span>
+            </div>
           </div>
           <p className="upload-description">Type or paste your transcript to generate a PDF</p>
           
+          {error && (
+            <div className="upload-error">
+              <span className="upload-error-icon">⚠️</span>
+              <p className="upload-error-text">{error}</p>
+            </div>
+          )}
+
           {transcriptText.trim() && !disabled && (
             <div className="transcript-actions">
-              <p className="char-count">{transcriptText.length} characters</p>
-              <button className="upload-btn">Generate Minutes</button>
+              <button className="upload-btn" onClick={handleGenerate} disabled={processing}>
+                {processing ? 'Processing...' : 'Generate Minutes'}
+              </button>
             </div>
           )}
         </>

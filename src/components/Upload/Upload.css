@@ -87,10 +87,35 @@
 }
 
 .upload-error {
-  color: #e74c3c;
-  font-size: 13px;
-  margin-top: 12px;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: linear-gradient(135deg, #fff5f5 0%, #fee2e2 100%);
+  border: 1px solid #fecaca;
+  border-radius: 12px;
+  padding: 14px 20px;
+  margin-top: 16px;
+  animation: shakeError 0.4s ease-out;
+}
+
+.upload-error-icon {
+  font-size: 20px;
+}
+
+.upload-error-text {
+  color: #dc2626;
+  font-size: 14px;
+  font-weight: 500;
+  margin: 0;
+}
+
+@keyframes shakeError {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-8px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
 }
 
 .files-list {
@@ -275,6 +300,14 @@
   cursor: not-allowed;
 }
 
+.textarea-footer {
+  padding: 10px 20px;
+  background: #f8f9fc;
+  border-top: 1px solid #e0e3eb;
+  display: flex;
+  justify-content: flex-end;
+}
+
 .transcript-actions {
   margin-top: 16px;
   display: flex;
@@ -283,8 +316,13 @@
 }
 
 .char-count {
-  text-align: center;
   font-size: 13px;
   color: #6b6b80;
   margin: 0;
+}
+
+.upload-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
 }
