@@ -239,6 +239,8 @@ The frontend runs on `http://localhost:3000` and the backend on `http://localhos
 | Password reset functionality     | 📋 Planned     |
 | Email notifications              | 📋 Planned     |
 | Meeting scheduling integration   | 📋 Planned     |
+| Visual previews of PDF templates | 📋 Planned     |
+| Improve templates                | 📋 Planned     |
 
 ---
 
