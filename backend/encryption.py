@@ -7,7 +7,7 @@ import os
 import base64
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
 class Encryption:
     def __init__(self):
@@ -25,7 +25,7 @@ class Encryption:
         # Use a salt from environment for per-installation uniqueness
         salt = bytes(os.getenv("SALT", "minutes-generator-salt-v1"), "utf-8")
 
-        kdf = PBKDF2(
+        kdf = PBKDF2HMAC(
             algorithm=hashes.SHA256(),
             length=32,
             salt=salt,
