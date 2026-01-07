@@ -5,10 +5,12 @@ from database import Database
 from authentication import Authentication
 from ai import AI
 from pdf_generator import PDFGenerator
+from encryption import Encryption
 from fastapi import FastAPI, Body, File, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
 
 auth = Authentication()
+encryption = Encryption()
 app = FastAPI()
 
 # CORS configuration
@@ -73,6 +75,12 @@ def get_user(token: str):
     user = db.find_one({"username": username})
     if user:
         ai_config = user.get("ai_config", {"ai_provider": "OpenAI", "api_key": ""})
+
+        # Decrypt API key before sending to client
+        encrypted_key = ai_config.get("api_key", "")
+        if encrypted_key and encryption.is_encrypted(encrypted_key):
+            ai_config["api_key"] = encryption.decrypt(encrypted_key)
+
         stats = user.get("stats", {
             "characters_processed": 0,
             "audio_seconds_processed": 0,
@@ -107,6 +115,12 @@ def update_user(token: str, data: Dict[str, Any] = Body(...)):
     if not update_data:
         return {"message": "No valid data to update"}
 
+    # Encrypt API key if present in ai_config
+    if "ai_config" in update_data and "api_key" in update_data["ai_config"]:
+        api_key = update_data["ai_config"]["api_key"]
+        if api_key:  # Only encrypt non-empty keys
+            update_data["ai_config"]["api_key"] = encryption.encrypt(api_key)
+
     result = db.update_one({"username": username}, {"$set": update_data})
     if result.modified_count > 0 or result.matched_count > 0:
         return {"message": "User updated successfully"}
@@ -133,11 +147,16 @@ async def process_transcript(
         return {"success": False, "message": "User not found"}
 
     ai_config = user.get("ai_config", {})
-    api_key = ai_config.get("api_key", "")
+    encrypted_key = ai_config.get("api_key", "")
     ai_provider = ai_config.get("ai_provider", "OpenAI")
 
-    if not api_key:
+    if not encrypted_key:
         return {"success": False, "message": "No API key configured. Please set up your API key in Profile."}
+
+    # Decrypt API key before using
+    api_key = encrypted_key
+    if encryption.is_encrypted(encrypted_key):
+        api_key = encryption.decrypt(encrypted_key)
 
     # Initialize AI handler
     ai = AI(api_key=api_key, provider=ai_provider)
