@@ -59,8 +59,8 @@ docker-compose up -d
 ### 4. Access the application
 
 - **Frontend**: http://localhost:3000
-- **Backend API**: http://localhost:8000
-- **API Documentation**: http://localhost:8000/docs
+- **Backend API**: http://localhost:3001
+- **API Documentation**: http://localhost:3001/docs
 
 ---
 
@@ -68,7 +68,7 @@ docker-compose up -d
 
 ### Backend Service
 - **Container**: `minutes-generator-backend`
-- **Port**: 8000
+- **Port**: 3001
 - **Base Image**: Python 3.12 slim
 - **Includes**: FastAPI, MongoDB drivers, FFmpeg for audio processing
 
@@ -169,7 +169,7 @@ CMD ["nginx", "-g", "daemon off;"]
 ```yaml
 services:
   backend:
-    command: uvicorn backend.main:app --host 0.0.0.0 --port 8000
+    command: uvicorn backend.main:app --host 0.0.0.0 --port 3001
 
   frontend:
     build:
@@ -204,10 +204,10 @@ docker-compose ps
 services:
   backend:
     ports:
-      - "8001:8000"  # Changed from 8000:8000
+      - "3002:3001"  # Changed from 3001:3001
   frontend:
     ports:
-      - "3001:3000"  # Changed from 3000:3000
+      - "3100:3000"  # Changed from 3000:3000
 ```
 
 ### MongoDB connection issues
@@ -229,7 +229,7 @@ Check if services are running properly:
 
 ```bash
 # Backend health
-curl http://localhost:8000/health
+curl http://localhost:3001/health
 
 # Frontend
 curl http://localhost:3000

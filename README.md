@@ -143,8 +143,8 @@ docker-compose up -d
 
 Access the application:
 - **Frontend**: http://localhost:3000
-- **Backend API**: http://localhost:8000
-- **API Docs**: http://localhost:8000/docs
+- **Backend API**: http://localhost:3001
+- **API Docs**: http://localhost:3001/docs
 
 For detailed Docker instructions, see [DOCKER.md](DOCKER.md).
 
@@ -154,7 +154,7 @@ For detailed Docker instructions, see [DOCKER.md](DOCKER.md).
 
 ```bash
 cd backend
-fastapi dev main.py
+fastapi dev main.py --port 3001
 ```
 
 #### Start the frontend (from project root)
@@ -163,7 +163,7 @@ fastapi dev main.py
 npm start
 ```
 
-The frontend runs on `http://localhost:3000` and the backend on `http://localhost:8000`.
+The frontend runs on `http://localhost:3000` and the backend on `http://localhost:3001`.
 
 ---
 
