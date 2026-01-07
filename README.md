@@ -129,14 +129,35 @@ Create a `.env` file in the project root:
 
 ## 🏃 Running the Application
 
-### Start the backend (from project root)
+### Option 1: Using Docker (Recommended)
+
+The easiest way to run the application is using Docker Compose:
+
+```bash
+# Build and start all services
+docker-compose up
+
+# Or run in detached mode
+docker-compose up -d
+```
+
+Access the application:
+- **Frontend**: http://localhost:3000
+- **Backend API**: http://localhost:8000
+- **API Docs**: http://localhost:8000/docs
+
+For detailed Docker instructions, see [DOCKER.md](DOCKER.md).
+
+### Option 2: Manual Setup
+
+#### Start the backend (from project root)
 
 ```bash
 cd backend
 fastapi dev main.py
 ```
 
-### Start the frontend (from project root)
+#### Start the frontend (from project root)
 
 ```bash
 npm start
