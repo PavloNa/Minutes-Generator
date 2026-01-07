@@ -10,11 +10,11 @@ services:
     ports:
       - "3001:3001"
     environment:
-      - 100_MONGODB_CONNECTION=${100_MONGODB_CONNECTION}
-      - 101_MONGODB_DATABASE=${101_MONGODB_DATABASE}
-      - 200_JWT_SECRET=${200_JWT_SECRET}
-      - 400_ENCRYPTION_KEY=${400_ENCRYPTION_KEY:-${200_JWT_SECRET}}
-      - 401_SALT=${401_SALT:-minutes-generator-salt-v1}
+      - MONGODB_CONNECTION=${MONGODB_CONNECTION}
+      - MONGODB_DATABASE=${MONGODB_DATABASE}
+      - JWT_SECRET=${JWT_SECRET}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:-${JWT_SECRET}}
+      - SALT=${SALT:-minutes-generator-salt-v1}
     volumes:
       - ./backend:/app/backend
     command: fastapi dev backend/main.py --host 0.0.0.0 --port 3001

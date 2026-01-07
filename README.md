@@ -116,11 +116,15 @@ Create a `.env` file in the project root:
 
 ```env
 # MongoDB Configuration
-100_MONGODB_CONNECTION=your-mongodb-connection-string
-101_MONGODB_DATABASE=your-database-name
+MONGODB_CONNECTION=your-mongodb-connection-string
+MONGODB_DATABASE=your-database-name
 
 # JWT Authentication
-200_JWT_SECRET=your-secret-key-for-jwt
+JWT_SECRET=your-secret-key-for-jwt
+
+# Encryption (Optional - uses JWT secret if not set)
+ENCRYPTION_KEY=your-encryption-key-for-api-keys
+SALT=your-unique-salt-value
 ```
 
 **Note:** Users configure their own OpenAI API keys through the Profile page after registration. No global API key is needed in the environment variables.

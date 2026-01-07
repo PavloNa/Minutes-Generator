@@ -33,11 +33,15 @@ Edit `.env` with your configuration:
 
 ```env
 # MongoDB Configuration
-100_MONGODB_CONNECTION=mongodb+srv://username:password@cluster.mongodb.net
-101_MONGODB_DATABASE=minutes_generator
+MONGODB_CONNECTION=mongodb+srv://username:password@cluster.mongodb.net
+MONGODB_DATABASE=minutes_generator
 
 # JWT Authentication
-200_JWT_SECRET=your-secure-secret-key-change-this
+JWT_SECRET=your-secure-secret-key-change-this
+
+# Encryption (Optional - uses JWT secret if not set)
+ENCRYPTION_KEY=your-encryption-key
+SALT=your-unique-salt-value
 ```
 
 ### 3. Build and run with Docker Compose

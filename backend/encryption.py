@@ -16,14 +16,14 @@ class Encryption:
         Falls back to JWT secret if ENCRYPTION_KEY is not set.
         """
         # Get encryption key from environment or use JWT secret as fallback
-        secret = os.getenv("400_ENCRYPTION_KEY") or os.getenv("200_JWT_SECRET")
+        secret = os.getenv("ENCRYPTION_KEY") or os.getenv("JWT_SECRET")
 
         if not secret:
-            raise ValueError("No encryption key found. Set 300_ENCRYPTION_KEY or 200_JWT_SECRET in environment.")
+            raise ValueError("No encryption key found. Set ENCRYPTION_KEY or JWT_SECRET in environment.")
 
         # Derive a proper Fernet key from the secret
-        # Use a fixed salt for consistency (in production, consider using a per-installation salt)
-        salt = bytes(os.getenv("401_SALT", "minutes-generator-salt-v1"), "utf-8")
+        # Use a salt from environment for per-installation uniqueness
+        salt = bytes(os.getenv("SALT", "minutes-generator-salt-v1"), "utf-8")
 
         kdf = PBKDF2(
             algorithm=hashes.SHA256(),
