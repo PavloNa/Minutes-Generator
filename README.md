@@ -2,6 +2,12 @@
 
 A full-stack web application that converts meeting transcripts or audio recordings into structured meeting minutes. Upload your content, let AI process it, and download professionally formatted PDF minutes with an intuitive, mobile-responsive interface.
 
+## 🌐 Live Demo
+
+**Try it now:** [https://minutes.pavlonaz.com/](https://minutes.pavlonaz.com/)
+
+Experience the app in action with a live deployment. Register for free and start generating professional meeting minutes instantly!
+
 ---
 
 ## 🚀 Features
@@ -245,6 +251,8 @@ The frontend runs on `http://localhost:3000` and the backend on `http://localhos
 | Meeting scheduling integration   | 📋 Planned     |
 | Visual previews of PDF templates | 📋 Planned     |
 | Improve templates                | 📋 Planned     |
+| Login/register forms             | 📋 Planned     |
+
 
 ---
 
