@@ -1,7 +1,6 @@
 import os
 from os.path import dirname, join
 import pymongo
-import ssl
 from dotenv import load_dotenv
 
 dotenv_path = join(dirname(__file__), '..', '.env')
@@ -14,19 +13,13 @@ class Database:
         if not self.db_url or not self.mydb:
             raise ValueError("Database connection string is not set in environment variables.")
 
-        # Create SSL context with OpenSSL 3.x compatibility
-        ssl_context = ssl.create_default_context()
-        ssl_context.check_hostname = True
-        ssl_context.verify_mode = ssl.CERT_REQUIRED
-
-        # OpenSSL 3.x compatibility: allow legacy renegotiation
-        ssl_context.options |= 0x4  # OP_LEGACY_SERVER_CONNECT
-
+        # MongoDB connection with TLS/SSL - using mongodb+srv:// automatically enables TLS
+        # Add connection parameters for better error handling
         self.client = pymongo.MongoClient(
             self.db_url,
-            tls=True,
-            tlsAllowInvalidCertificates=False,
-            ssl_context=ssl_context
+            serverSelectionTimeoutMS=5000,
+            connectTimeoutMS=10000,
+            socketTimeoutMS=10000
         )
         self.database = self.client[self.mydb]
         self.collection = self.database[db_collection]
