@@ -14,7 +14,6 @@ auth = Authentication()
 encryption = Encryption()
 app = FastAPI()
 router = APIRouter()
-app.include_router(router, prefix="/api")
 # CORS configuration
 # Allow local network IPs (192.168.x.x, 10.x.x.x, 172.16-31.x.x) for development
 # and specific production origins from environment variable
@@ -340,3 +339,6 @@ def get_file(token: str, filename: str):
             return {"success": True, "data": f.get("data"), "filename": filename}
 
     return {"success": False, "message": "File not found"}
+
+
+app.include_router(router, prefix="/api")
