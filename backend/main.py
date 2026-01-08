@@ -1,5 +1,6 @@
 from typing import Dict, Any, Optional
 import logging
+import os
 from datetime import datetime
 from database import Database
 from authentication import Authentication
@@ -14,9 +15,19 @@ encryption = Encryption()
 app = FastAPI()
 
 # CORS configuration
+# Allow local network IPs (192.168.x.x, 10.x.x.x, 172.16-31.x.x) for development
+# and specific production origins from environment variable
+import re
+local_network_regex = r"^https?://(localhost|127\.0\.0\.1|192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2[0-9]|3[0-1])\.\d{1,3}\.\d{1,3})(:\d+)?$"
+
+# Get production origins from environment (e.g., "https://yourdomain.com,https://app.yourdomain.com")
+production_origins = os.getenv("CORS_ORIGINS", "")
+allowed_origins = [origin.strip() for origin in production_origins.split(",") if origin.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=allowed_origins if allowed_origins else [],
+    allow_origin_regex=local_network_regex,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
