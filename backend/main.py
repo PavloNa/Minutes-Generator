@@ -7,13 +7,14 @@ from authentication import Authentication
 from ai import AI
 from pdf_generator import PDFGenerator
 from encryption import Encryption
-from fastapi import FastAPI, Body, File, UploadFile, Form
+from fastapi import FastAPI, Body, File, UploadFile, Form, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 
 auth = Authentication()
 encryption = Encryption()
 app = FastAPI()
-
+router = APIRouter()
+app.include_router(router, prefix="/api")
 # CORS configuration
 # Allow local network IPs (192.168.x.x, 10.x.x.x, 172.16-31.x.x) for development
 # and specific production origins from environment variable
@@ -33,12 +34,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/")
+@router.get("/")
 def read_root():
     return {"status": "ok"}
 
 # User authentication endpoints
-@app.post("/login")
+@router.post("/login")
 def login_user(username: str, password: str):
     success = auth.login(username, password)
     logging.info(f"User login attempt for {username}: {'successful' if success[0] else 'failed'}")
@@ -47,7 +48,7 @@ def login_user(username: str, password: str):
     else:
         return {"message": success[1]}
 
-@app.post("/reset_password")
+@router.post("/reset_password")
 # TODO: implement email sending functionality
 def reset_password(email: str):
     success = auth.reset_password(email)
@@ -56,7 +57,7 @@ def reset_password(email: str):
     else:
         return {"message": "Failed to send password reset email."}
 
-@app.post("/verify_token")
+@router.post("/verify_token")
 def verify_token(token: str):
     success = auth.verify_token(token)
     if success[0]:
@@ -66,7 +67,7 @@ def verify_token(token: str):
 
 
 # User management endpoints
-@app.post("/create_user")
+@router.post("/create_user")
 def register_user(username: str, password: str, email: str):
     success = auth.register(username, password, email)
     logging.info(f"User registration attempt for {username}: {'successful' if success[0] else 'failed'}")
@@ -75,7 +76,7 @@ def register_user(username: str, password: str, email: str):
     else:
         return {"message": success[1]}
 
-@app.post("/get_user")
+@router.post("/get_user")
 def get_user(token: str):
     verified = auth.verify_token(token)
     if not verified[0]:
@@ -106,7 +107,7 @@ def get_user(token: str):
     else:
         return {"message": "User not found"}
 
-@app.post("/update_user")
+@router.post("/update_user")
 def update_user(token: str, data: Dict[str, Any] = Body(...)):
     verified = auth.verify_token(token)
     if not verified[0]:
@@ -138,7 +139,7 @@ def update_user(token: str, data: Dict[str, Any] = Body(...)):
     else:
         return {"message": "Failed to update user"}
 
-@app.post("/process_transcript")
+@router.post("/process_transcript")
 async def process_transcript(
     token: str = Form(...),
     transcript_text: Optional[str] = Form(None),
@@ -220,14 +221,14 @@ async def process_transcript(
         return {"success": False, "message": result.get("error", "Processing failed")}
 
 
-@app.get("/pdf_templates")
+@router.get("/pdf_templates")
 def get_pdf_templates():
     """Get available PDF templates."""
     templates = PDFGenerator.get_templates()
     return {"success": True, "templates": templates}
 
 
-@app.post("/create_pdf")
+@router.post("/create_pdf")
 def create_pdf(
     token: str = Form(...),
     template: str = Form(...),
@@ -290,7 +291,7 @@ def create_pdf(
         return {"success": False, "message": "Failed to save PDF"}
 
 
-@app.post("/get_user_files")
+@router.post("/get_user_files")
 def get_user_files(token: str):
     """Get list of user's saved files (without the base64 data)."""
     verified = auth.verify_token(token)
@@ -319,7 +320,7 @@ def get_user_files(token: str):
     return {"success": True, "files": file_list}
 
 
-@app.post("/get_file")
+@router.post("/get_file")
 def get_file(token: str, filename: str):
     """Get a specific file's base64 data."""
     verified = auth.verify_token(token)
