@@ -8,6 +8,12 @@ A full-stack web application that converts meeting transcripts or audio recordin
 
 Experience the app in action with a live deployment. Register for free and start generating professional meeting minutes instantly!
 
+> ⚠️ **Security Notice:** This is a demo application. Please do not use real passwords or upload sensitive/confidential meeting content. Use test credentials and sample data only.
+
+### Preview
+
+![Main Application Interface](readme_images/main_page.png)
+
 ---
 
 ## 🚀 Features
@@ -252,6 +258,8 @@ The frontend runs on `http://localhost:3000` and the backend on `http://localhos
 | Visual previews of PDF templates | 📋 Planned     |
 | Improve templates                | 📋 Planned     |
 | Login/register forms             | 📋 Planned     |
+| Better password requirements     | 📋 Planned     |
+| Remove logo                      | 📋 Planned     |
 
 
 ---
