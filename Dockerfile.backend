@@ -5,10 +5,12 @@ FROM python:3.12-slim
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies including FFmpeg for audio processing
+# Install system dependencies including FFmpeg for audio processing and SSL certificates
 RUN apt-get update && apt-get install -y \
     ffmpeg \
-    && rm -rf /var/lib/apt/lists/*
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/* \
+    && update-ca-certificates
 
 # Copy requirements file
 COPY requirements.txt .
