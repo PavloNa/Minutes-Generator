@@ -1,4 +1,4 @@
-const API_BASE_URL = `${window.location.protocol}//${window.location.hostname}:3001`;
+const API_BASE_URL = `/api`;
 
 export const login = async (username, password) => {
   try {
