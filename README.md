@@ -260,6 +260,7 @@ The frontend runs on `http://localhost:3000` and the backend on `http://localhos
 | Login/register forms             | 📋 Planned     |
 | Better password requirements     | 📋 Planned     |
 | Remove logo                      | 📋 Planned     |
+| Add loading on '/'               | 📋 Planned     |
 
 
 ---
@@ -292,6 +293,11 @@ The frontend runs on `http://localhost:3000` and the backend on `http://localhos
 - Usage statistics displayed prominently
 
 ---
+
+## 📄 Deployment commands for me
+- Build frontend: git fetch && git pull && docker run --rm -v /home/pavlo/Hosting-Projects/Minutes-Generator:/app -w /app node:20-alpine sh -c "npm install && npm run build"
+- Build backend: git fetch && git pull && docker-compose down && docker-compose build backend && docker-compose up -d
+- Using CloudFlare tunnel (~/.cloudflared/config.yml)
 
 ## 📄 License
 
