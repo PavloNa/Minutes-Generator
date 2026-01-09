@@ -254,13 +254,13 @@ The frontend runs on `http://localhost:3000` and the backend on `http://localhos
 | Additional AI providers          | 📋 Planned     |
 | Password reset functionality     | 📋 Planned     |
 | Email notifications              | 📋 Planned     |
-| Meeting scheduling integration   | 📋 Planned     |
 | Visual previews of PDF templates | 📋 Planned     |
 | Improve templates                | 📋 Planned     |
 | Login/register forms             | ✅ Complete    |
 | Better password requirements     | ✅ Complete    |
 | Remove logo                      | ✅ Complete    |
-| Add loading on '/'               | 📋 Planned     |
+| Add loading on '/'               | ✅ Complete    |
+| Check if username exists         | 📋 Planned     |
 
 
 ---
