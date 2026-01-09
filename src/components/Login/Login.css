@@ -174,3 +174,73 @@
   cursor: not-allowed;
   transform: none;
 }
+
+/* Password requirements indicator */
+.password-requirements {
+  margin-top: 12px;
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.requirement {
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  margin: 6px 0;
+  transition: all 0.3s ease;
+}
+
+.requirement .icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  margin-right: 8px;
+  font-weight: bold;
+  font-size: 12px;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.requirement.unmet {
+  color: #6c757d;
+}
+
+.requirement.unmet .icon {
+  color: #dc3545;
+  background: #f8d7da;
+  border: 1px solid #f5c2c7;
+}
+
+.requirement.met {
+  color: #198754;
+  font-weight: 500;
+}
+
+.requirement.met .icon {
+  color: #ffffff;
+  background: #198754;
+  border: 1px solid #146c43;
+}
+
+/* Email validation error */
+.validation-error {
+  display: block;
+  margin-top: 6px;
+  color: #dc2626;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.invalid-input {
+  border-color: #dc2626 !important;
+  background: #fee2e2 !important;
+}
+
+.invalid-input:focus {
+  border-color: #dc2626 !important;
+  box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.15) !important;
+}

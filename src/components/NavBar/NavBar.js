@@ -32,6 +32,7 @@ const NavBar = () => {
         <div className="floating-nav">
           <button className="floating-text-btn" onClick={() => navigate('/')}>Home</button>
           <button className="floating-text-btn" onClick={() => navigate('/files')}>Files</button>
+          <button className="floating-text-btn" onClick={() => navigate('/about')}>About</button>
           <button className="floating-text-btn" onClick={() => navigate('/profile')}>Profile</button>
           <button className="floating-text-btn logout" onClick={handleLogout}>Logout</button>
         </div>

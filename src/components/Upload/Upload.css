@@ -39,14 +39,19 @@
 
 .upload-dropzone.disabled {
   cursor: not-allowed;
-  opacity: 0.5;
-  background: rgba(200, 200, 200, 0.3);
+  background: rgba(255, 255, 255, 0.7);
   border-color: #d0d0d0;
 }
 
 .upload-dropzone.disabled:hover {
   border-color: #d0d0d0;
-  background: rgba(200, 200, 200, 0.3);
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.upload-dropzone.disabled .dropzone-title,
+.upload-dropzone.disabled .dropzone-subtitle,
+.upload-dropzone.disabled .dropzone-formats {
+  opacity: 0.6;
 }
 
 .dropzone-content {
@@ -81,9 +86,10 @@
 .upload-description {
   text-align: center;
   font-size: 15px;
-  color: #3a3a52;
+  color: #ffffff;
   margin: 20px 0 0 0;
   font-weight: 500;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .upload-error {

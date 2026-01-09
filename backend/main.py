@@ -39,7 +39,7 @@ def read_root():
 
 # User authentication endpoints
 @router.post("/login")
-def login_user(username: str, password: str):
+def login_user(username: str = Form(...), password: str = Form(...)):
     success = auth.login(username, password)
     logging.info(f"User login attempt for {username}: {'successful' if success[0] else 'failed'}")
     if success[0]:
@@ -67,7 +67,7 @@ def verify_token(token: str):
 
 # User management endpoints
 @router.post("/create_user")
-def register_user(username: str, password: str, email: str):
+def register_user(username: str = Form(...), password: str = Form(...), email: str = Form(...)):
     success = auth.register(username, password, email)
     logging.info(f"User registration attempt for {username}: {'successful' if success[0] else 'failed'}")
     if success[0]:

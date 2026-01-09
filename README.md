@@ -257,9 +257,9 @@ The frontend runs on `http://localhost:3000` and the backend on `http://localhos
 | Meeting scheduling integration   | 📋 Planned     |
 | Visual previews of PDF templates | 📋 Planned     |
 | Improve templates                | 📋 Planned     |
-| Login/register forms             | 📋 Planned     |
-| Better password requirements     | 📋 Planned     |
-| Remove logo                      | 📋 Planned     |
+| Login/register forms             | ✅ Complete    |
+| Better password requirements     | ✅ Complete    |
+| Remove logo                      | ✅ Complete    |
 | Add loading on '/'               | 📋 Planned     |
 
 

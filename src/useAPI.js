@@ -1,12 +1,14 @@
-const API_BASE_URL = `/api`;
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3001/api';
 
 export const login = async (username, password) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/login?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`, {
+    const formData = new FormData();
+    formData.append('username', username);
+    formData.append('password', password);
+
+    const response = await fetch(`${API_BASE_URL}/login`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      body: formData,
     });
 
     const data = await response.json();
@@ -26,11 +28,14 @@ export const login = async (username, password) => {
 
 export const register = async (username, password, email) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/create_user?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}&email=${encodeURIComponent(email)}`, {
+    const formData = new FormData();
+    formData.append('username', username);
+    formData.append('password', password);
+    formData.append('email', email);
+
+    const response = await fetch(`${API_BASE_URL}/create_user`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      body: formData,
     });
 
     const data = await response.json();

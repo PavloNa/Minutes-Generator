@@ -210,15 +210,23 @@ function Main() {
   return (
     <div className="main-page-wrapper">
       <NavBar />
-      {!loading && !hasApiKey && (
-        <div className="api-setup-banner">
-          <span className="banner-icon">⚠️</span>
-          <p>You haven't configured your AI API key yet.</p>
-          <button onClick={() => navigate('/profile')}>Set up in Profile →</button>
+
+      {loading ? (
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
+          <p className="loading-text">Loading...</p>
         </div>
-      )}
-      
-      {!loading && !generatedMinutes && (
+      ) : (
+        <>
+          {!hasApiKey && (
+            <div className="api-setup-banner">
+              <span className="banner-icon">⚠️</span>
+              <p>You haven't configured your AI API key yet.</p>
+              <button onClick={() => navigate('/profile')}>Set up in Profile →</button>
+            </div>
+          )}
+
+          {!generatedMinutes && (
         <div className="main-content">
           <Upload disabled={!hasApiKey} onMinutesGenerated={handleMinutesGenerated} />
           {(filesCount > 0 || userStats?.characters_processed > 0) && (
@@ -577,6 +585,9 @@ function Main() {
           </div>
         </div>
       )}
+        </>
+      )}
+
       {!loading && <Footer />}
     </div>
   );
