@@ -33,10 +33,6 @@ services:
       - "3000:3000"
     environment:
       - REACT_APP_API_BASE_URL=${REACT_APP_API_BASE_URL}
-    volumes:
-      - ./src:/app/src
-      - ./public:/app/public
-    command: npm start
     networks:
       - minutes-network
     depends_on:

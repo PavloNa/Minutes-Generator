@@ -1,21 +1,13 @@
-# Frontend Dockerfile for React application
-
-FROM node:18-alpine
-
-# Set working directory
+# Build stage
+FROM node:18-alpine AS build
 WORKDIR /app
-
-# Copy package files
 COPY package*.json ./
-
-# Install dependencies
 RUN npm install
-
-# Copy application code
 COPY . .
+RUN npm run build
 
-# Expose port
-EXPOSE 3000
-
-# Command will be overridden by docker-compose
-CMD ["npm", "start"]
+# Serve stage
+FROM nginx:alpine
+COPY --from=build /app/build /usr/share/nginx/html
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
