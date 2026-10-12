@@ -12,7 +12,7 @@ Experience the app in action with a live deployment. Register for free and start
 
 ### Preview
 
-![Main Application Interface](readme_images/main_page.png)
+![Main Application Interface](readme_images/dashboard.png)
 
 ---
 
