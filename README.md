@@ -18,28 +18,26 @@ Experience the app in action with a live deployment. Register for free and start
 
 ## 🚀 Features
 
-- ✅ **Modern React Frontend** — Sleek, responsive UI with centered navigation and mobile-first design
-- ✅ **FastAPI Backend** — High-performance Python API
-- ✅ **User Authentication** — Secure registration/login with bcrypt password hashing and JWT tokens
-- ✅ **MongoDB Database** — Persistent storage for users and meeting minutes
-- ✅ **Multiple Input Formats** — Upload text transcripts or audio files (MP3, WAV, M4A, OGG)
-- ✅ **AI-Powered Processing** — OpenAI GPT integration with configurable API keys
-- ✅ **Structured Minutes Output** — Consistent JSON format with summary, discussion points, action items, and decisions
-- ✅ **Professional PDF Generation** — Multiple template options (Professional, Minimal, Modern)
-- ✅ **Personal File Storage** — Save and retrieve your meeting history with usage statistics
-- ✅ **Editable Minutes** — Review and edit AI-generated content before PDF creation
-- ✅ **Fully Responsive** — Optimized for all screen sizes from mobile (375px) to desktop
+- ✅ **React frontend**: dark "dusk" theme with a light theme toggle, responsive from 375px phones to desktop
+- ✅ **FastAPI backend**: Python API with JWT auth and bcrypt password hashing
+- ✅ **MongoDB storage**: users, encrypted API keys, saved PDFs and usage stats
+- ✅ **Audio or text input**: upload MP3, WAV, M4A, OGG or TXT, or paste a transcript
+- ✅ **Free local transcription**: audio is transcribed on the server with [faster-whisper](https://github.com/SYSTRAN/faster-whisper), no API cost
+- ✅ **Choice of AI for the minutes**: Groq (free tier) or OpenAI, using each user's own API key
+- ✅ **Editable minutes**: review and fix the draft before anything is saved
+- ✅ **Three PDF styles**: Professional, Minimal and Modern, with numbered sections, action item checkboxes and page numbers
+- ✅ **Restyle saved PDFs**: switch a saved file to another style from the Files page
+- ✅ **Personal files and usage stats**: every PDF is saved to your account
 
 ---
 
 ## 🔄 How It Works
 
-1. **Upload** — Submit a meeting transcript (text) or audio recording via drag-and-drop or file browser
-2. **Process** — AI extracts key information and structures it into organized meeting minutes
-3. **Review & Edit** — Modify the AI-generated content (title, attendees, discussion points, action items, decisions)
-4. **Select Template** — Choose from Professional, Minimal, or Modern PDF templates
-5. **Generate PDF** — Create a professionally formatted PDF with instant preview
-6. **Download & Store** — Download your PDF and access it anytime from your Files page
+1. **Add the meeting**: drop in a recording or transcript, or paste the text
+2. **Generate**: audio is transcribed locally with Whisper, then your chosen AI provider structures it into minutes
+3. **Review and edit**: fix the title, attendees, topics, decisions and action items
+4. **Pick a style**: Professional, Minimal or Modern
+5. **Download**: the PDF is saved to Files, where you can open it again or change its style
 
 ---
 
@@ -75,17 +73,17 @@ The AI structures meeting content into the following format:
 
 ## 🛠️ Tech Stack
 
-| Layer         | Technology                            |
-|---------------|---------------------------------------|
-| Frontend      | React 19, React Router                |
-| Styling       | CSS3 with gradients, animations       |
-| Backend       | FastAPI (Python 3.12+)                |
-| Database      | MongoDB                               |
-| Authentication| bcrypt + JWT tokens                   |
-| AI Processing | OpenAI GPT-4 (configurable)           |
-| Audio         | OpenAI Whisper API                    |
-| PDF Generation| ReportLab (Python)                    |
-| File Storage  | MongoDB GridFS                        |
+| Layer           | Technology                                         |
+|-----------------|----------------------------------------------------|
+| Frontend        | React 19, React Router                             |
+| Styling         | Plain CSS with design tokens, light/dark themes    |
+| Backend         | FastAPI (Python 3.12)                              |
+| Database        | MongoDB (Atlas or self-hosted)                     |
+| Authentication  | bcrypt + JWT tokens                                |
+| Transcription   | faster-whisper, runs locally (`small` model)       |
+| Minutes         | Groq `openai/gpt-oss-120b` or OpenAI `gpt-4o-mini` |
+| PDF generation  | ReportLab                                          |
+| API key storage | Fernet encryption at rest                          |
 
 ---
 
@@ -93,10 +91,12 @@ The AI structures meeting content into the following format:
 
 ### Prerequisites
 
-- Python 3.12+
+- Python 3.12 (3.15 is too new for some dependencies; the Docker image uses 3.11)
 - Node.js 18+
-- MongoDB instance
-- FFmpeg (for audio processing)
+- A MongoDB instance (MongoDB Atlas works)
+- An API key from [Groq](https://console.groq.com/keys) (free) or [OpenAI](https://platform.openai.com/api-keys), added later in the app's Settings
+
+No FFmpeg is needed: faster-whisper decodes audio itself. The first audio upload downloads the Whisper model (about 500 MB) to the Hugging Face cache.
 
 ### 1. Clone the repository
 
@@ -124,22 +124,30 @@ npm install
 
 ### 4. Configure environment variables
 
-Create a `.env` file in the project root:
+Copy `.env.example` to `.env` in the project root and fill it in:
 
 ```env
-# MongoDB Configuration
-MONGODB_CONNECTION=your-mongodb-connection-string
-MONGODB_DATABASE=your-database-name
+# MongoDB
+MONGODB_CONNECTION=mongodb+srv://<user>:<password>@<cluster>.mongodb.net/?appName=<app>
+MONGODB_DATABASE=minutes_generator_db
 
-# JWT Authentication
-JWT_SECRET=your-secret-key-for-jwt
+# Signs login tokens. Changing it logs everyone out.
+JWT_SECRET=a-long-random-string
 
-# Encryption (Optional - uses JWT secret if not set)
-ENCRYPTION_KEY=your-encryption-key-for-api-keys
-SALT=your-unique-salt-value
+# Encrypts stored API keys. Changing it makes saved keys unreadable.
+ENCRYPTION_KEY=another-long-random-string
+SALT=a-unique-salt
+
+# Where the React app finds the API
+REACT_APP_API_BASE_URL=http://localhost:3001/api
+
+# Optional
+# GROQ_MODEL=openai/gpt-oss-120b   # Groq retires models often; override here
+# WHISPER_MODEL=small              # tiny, base, small, medium, large-v3
+# CORS_ORIGINS=https://your-domain.com
 ```
 
-**Note:** Users configure their own OpenAI API keys through the Profile page after registration. No global API key is needed in the environment variables.
+No global AI key goes in `.env`. Each user picks a provider and saves their own key on the **Settings** page.
 
 ---
 
@@ -166,12 +174,14 @@ For detailed Docker instructions, see [DOCKER.md](DOCKER.md).
 
 ### Option 2: Manual Setup
 
-#### Start the backend (from project root)
+#### Start the backend
 
 ```bash
 cd backend
 fastapi dev main.py --port 3001
 ```
+
+On Windows the auto-reloader can keep serving old code after edits. If changes don't show up, stop it with Ctrl+C and start it again, or use `fastapi run main.py --port 3001`.
 
 #### Start the frontend (from project root)
 
@@ -185,33 +195,36 @@ The frontend runs on `http://localhost:3000` and the backend on `http://localhos
 
 ## 📡 API Endpoints
 
+All routes are under `/api`. Interactive docs: http://localhost:3001/docs
+
 ### Authentication
-| Method | Endpoint        | Description                     |
-|--------|-----------------|----------------------------------|
-| GET    | `/`             | Health check                     |
-| GET    | `/health`       | Database connection status       |
-| POST   | `/register`     | Register a new user              |
-| POST   | `/login`        | Login and receive JWT token      |
-| POST   | `/verify_token` | Verify JWT token validity        |
+| Method | Endpoint          | Description                                  |
+|--------|-------------------|----------------------------------------------|
+| GET    | `/`               | Root check                                   |
+| POST   | `/create_user`    | Register a new user                          |
+| POST   | `/login`          | Login and receive a JWT                      |
+| POST   | `/verify_token`   | Check a JWT                                  |
+| POST   | `/reset_password` | Stub: returns success but sends no email yet |
 
-### User Management
-| Method | Endpoint        | Description                     |
-|--------|-----------------|----------------------------------|
-| POST   | `/get_user`     | Get user details and stats       |
-| POST   | `/update_user`  | Update user profile and AI config|
+### User
+| Method | Endpoint       | Description                       |
+|--------|----------------|-----------------------------------|
+| POST   | `/get_user`    | User details, AI config and usage |
+| POST   | `/update_user` | Save AI provider and API key      |
 
-### Minutes Processing
-| Method | Endpoint              | Description                          |
-|--------|-----------------------|--------------------------------------|
-| POST   | `/process_transcript` | Process text/audio into minutes      |
-| POST   | `/create_pdf`         | Generate PDF from minutes            |
-| GET    | `/pdf_templates`      | Get available PDF template styles    |
+### Minutes
+| Method | Endpoint              | Description                                  |
+|--------|-----------------------|----------------------------------------------|
+| POST   | `/process_transcript` | Turn text or audio into structured minutes   |
+| GET    | `/pdf_templates`      | List PDF styles                              |
+| POST   | `/create_pdf`         | Build a PDF and save it to the user's files  |
 
-### File Management
-| Method | Endpoint          | Description                     |
-|--------|-------------------|----------------------------------|
-| POST   | `/get_user_files` | Get user's saved PDFs            |
-| GET    | `/download/<id>`  | Download a specific PDF file     |
+### Files
+| Method | Endpoint          | Description                          |
+|--------|-------------------|--------------------------------------|
+| POST   | `/get_user_files` | List saved PDFs (no file data)       |
+| POST   | `/get_file`       | Get one PDF as base64                |
+| POST   | `/restyle_file`   | Rebuild a saved PDF in another style |
 
 ---
 
@@ -232,12 +245,12 @@ The frontend runs on `http://localhost:3000` and the backend on `http://localhos
 | **UI/UX**                        |                |
 | Responsive navigation bar        | ✅ Complete    |
 | Mobile-first design (375px+)     | ✅ Complete    |
-| Gradient-based styling           | ✅ Complete    |
+| Dark/light themes                | ✅ Complete    |
 | **File Processing**              |                |
 | Text transcript upload           | ✅ Complete    |
 | Audio file upload (drag & drop)  | ✅ Complete    |
-| Audio transcription (Whisper)    | ✅ Complete    |
-| GPT meeting minutes generation   | ✅ Complete    |
+| Audio transcription (local Whisper) | ✅ Complete |
+| Minutes generation (Groq/OpenAI) | ✅ Complete    |
 | **Minutes Management**           |                |
 | Editable minutes interface       | ✅ Complete    |
 | Multiple PDF templates           | ✅ Complete    |
@@ -251,11 +264,14 @@ The frontend runs on `http://localhost:3000` and the backend on `http://localhos
 | Files dashboard with statistics  | ✅ Complete    |
 | Usage tracking                   | ✅ Complete    |
 | **Future Enhancements**          |                |
-| Additional AI providers          | 📋 Planned     |
-| Password reset functionality     | 📋 Planned     |
+| Groq provider (free tier)        | ✅ Complete    |
+| More AI providers (Anthropic, Gemini) | 📋 Planned |
+| Password reset (backend is a stub) | 📋 Planned   |
 | Email notifications              | 📋 Planned     |
-| Visual previews of PDF templates | 📋 Planned     |
-| Improve templates                | 📋 Planned     |
+| Visual previews of PDF templates | ✅ Complete    |
+| Improve templates                | ✅ Complete    |
+| Restyle saved PDFs               | ✅ Complete    |
+| Cyrillic/Unicode fonts in PDFs   | 📋 Planned     |
 | Login/register forms             | ✅ Complete    |
 | Better password requirements     | ✅ Complete    |
 | Remove logo                      | ✅ Complete    |
@@ -267,30 +283,12 @@ The frontend runs on `http://localhost:3000` and the backend on `http://localhos
 
 ## 🎨 UI/UX Highlights
 
-### Centered Navigation Bar
-- Modern floating navigation with smooth blue gradient
-- Responsive design that adapts to all screen sizes
-- Four navigation options when logged in: Home, Files, Profile, Logout
-- Centered positioning for balanced visual hierarchy
-
-### Mobile Optimization
-- Fully responsive down to 375px width (iPhone SE and similar devices)
-- Adaptive button sizes and spacing on smaller screens
-- Stats banner that wraps content intelligently on mobile
-- Touch-friendly interface with appropriate tap targets
-
-### Visual Design
-- Gradient-based color scheme with professional blue tones
-- Smooth animations and hover effects
-- Card-based layouts with subtle shadows
-- Consistent spacing and typography throughout
-
-### User Experience
-- Drag-and-drop file upload
-- Real-time character counting for text input
-- Inline editing of AI-generated content
-- Live PDF preview before download
-- Usage statistics displayed prominently
+- **Navigation**: logo, Dashboard, Files, Settings, About; collapses into a labelled menu on phones
+- **Look**: dark "dusk" background with an electric-blue accent, plus a light theme toggle remembered per browser
+- **Minutes view**: each section has its own color and number, matching the PDF layout
+- **Motion**: short entrances and staggered sections, all respecting reduced-motion settings
+- **Accessibility**: keyboard-friendly dialogs (Escape closes them), visible focus rings, WCAG AA contrast in both themes
+- **States**: loading, empty and error states on every page
 
 ---
 
