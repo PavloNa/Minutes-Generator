@@ -1,7 +1,7 @@
 import logging
 import tempfile
 import os
-from ai_providers import OpenAIProvider
+from ai_providers import OpenAIProvider, GroqProvider
 from ai_providers.base import BaseProvider
 
 # Try to import mutagen for audio duration detection
@@ -43,6 +43,7 @@ class AI:
 
     PROVIDERS = {
         "OpenAI": OpenAIProvider,
+        "Groq": GroqProvider,
         # Future providers:
         # "Anthropic": AnthropicProvider,
         # "Google": GoogleProvider,

@@ -34,10 +34,10 @@ Return ONLY valid JSON, no markdown formatting or additional text."""
     def __init__(self, api_key: str):
         self.api_key = api_key
 
-    @abstractmethod
     def transcribe_audio(self, file_content: bytes, filename: str) -> str:
-        """Transcribe audio file to text."""
-        pass
+        """Transcribe audio locally with Whisper, so no provider bills for it."""
+        from .local_whisper import transcribe  # lazy: loading the model is slow and only audio needs it
+        return transcribe(file_content)
 
     @abstractmethod
     def generate_minutes(self, transcript: str) -> dict:
@@ -51,15 +51,15 @@ Return ONLY valid JSON, no markdown formatting or additional text."""
         
         # Handle authentication errors
         if "401" in error_str or "invalid_api_key" in error_str or "authentication" in error_str.lower():
-            return "Invalid API key. Please check your API key in Profile settings."
+            return "Invalid API key. Please check your API key in Settings."
         
+        # Quota before rate limit: providers often send both as 429
+        if "quota" in error_str.lower() or "insufficient" in error_str.lower() or "credit" in error_str.lower():
+            return "Your AI provider account is out of credits. Add credits in its billing settings, then try again."
+
         # Handle rate limits
         if "429" in error_str or "rate_limit" in error_str:
             return "API rate limit exceeded. Please wait a moment and try again."
-        
-        # Handle quota errors
-        if "quota" in error_str.lower() or "insufficient" in error_str.lower():
-            return "API quota exceeded. Please check your billing settings."
         
         # Handle connection errors
         if "connection" in error_str.lower() or "timeout" in error_str.lower():

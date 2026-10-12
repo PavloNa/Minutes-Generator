@@ -1,5 +1,4 @@
 fastapi[standard]
-openai-whisper
 openai
 pymongo[srv]
 python-dotenv
@@ -8,3 +7,6 @@ PyJWT
 reportlab
 mutagen
 cryptography
+faster-whisper
+# av 19 dropped the metadata_errors arg that faster-whisper 1.2.x passes to av.open
+av<19

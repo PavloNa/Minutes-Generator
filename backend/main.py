@@ -9,6 +9,7 @@ from pdf_generator import PDFGenerator
 from encryption import Encryption
 from fastapi import FastAPI, Body, File, UploadFile, Form, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.concurrency import run_in_threadpool
 
 auth = Authentication()
 encryption = Encryption()
@@ -162,7 +163,7 @@ async def process_transcript(
     ai_provider = ai_config.get("ai_provider", "OpenAI")
 
     if not encrypted_key:
-        return {"success": False, "message": "No API key configured. Please set up your API key in Profile."}
+        return {"success": False, "message": "No API key configured. Add one in Settings."}
 
     # Decrypt API key before using
     api_key = encrypted_key
@@ -179,17 +180,18 @@ async def process_transcript(
 
         # Handle text files
         if filename.endswith('.txt'):
-            result = ai.handle_txt_file(file_content)
+            result = await run_in_threadpool(ai.handle_txt_file, file_content)
 
         # Handle audio files
         elif filename.endswith(('.mp3', '.wav', '.m4a', '.ogg', '.webm')):
-            result = ai.handle_audio_file(file_content, filename)
+            # Off the event loop: local transcription can take minutes.
+            result = await run_in_threadpool(ai.handle_audio_file, file_content, filename)
         else:
             return {"success": False, "message": "Unsupported file type"}
 
     # Handle text input
     elif transcript_text:
-        result = ai.handle_text(transcript_text)
+        result = await run_in_threadpool(ai.handle_text, transcript_text)
     else:
         return {"success": False, "message": "No transcript or file provided"}
 
@@ -270,7 +272,9 @@ def create_pdf(
         "template": template,
         "created_at": datetime.utcnow().isoformat(),
         "data": pdf_base64,
-        "title": minutes_data.get("title", "Meeting Minutes")
+        "title": minutes_data.get("title", "Meeting Minutes"),
+        # Kept so the PDF can be rebuilt in another style later.
+        "minutes": minutes_data
     }
 
     # Add to user's files array
@@ -311,7 +315,8 @@ def get_user_files(token: str):
             "filename": f.get("filename"),
             "template": f.get("template"),
             "created_at": f.get("created_at"),
-            "title": f.get("title")
+            "title": f.get("title"),
+            "restylable": "minutes" in f
         }
         for f in files
     ]
@@ -339,6 +344,37 @@ def get_file(token: str, filename: str):
             return {"success": True, "data": f.get("data"), "filename": filename}
 
     return {"success": False, "message": "File not found"}
+
+
+@router.post("/restyle_file")
+def restyle_file(token: str = Form(...), filename: str = Form(...), template: str = Form(...)):
+    """Rebuild a saved PDF in another template from its stored minutes."""
+    verified = auth.verify_token(token)
+    if not verified[0]:
+        return {"success": False, "message": "Invalid or expired token"}
+    if template not in PDFGenerator.TEMPLATES:
+        return {"success": False, "message": "Unknown PDF style"}
+
+    username = verified[1]
+    db = Database("users").get_collection()
+    user = db.find_one({"username": username}, {"files": {"$elemMatch": {"filename": filename}}})
+    entry = (user or {}).get("files", [None])[0]
+    if not entry:
+        return {"success": False, "message": "File not found"}
+    if "minutes" not in entry:
+        return {"success": False, "message": "This PDF was made before styles could be changed. Generate it again to restyle it."}
+
+    try:
+        pdf_base64 = PDFGenerator(template=template).generate(entry["minutes"])
+    except Exception as e:
+        logging.error(f"PDF restyle error: {e}")
+        return {"success": False, "message": "Failed to generate PDF"}
+
+    db.update_one(
+        {"username": username, "files.filename": filename},
+        {"$set": {"files.$.data": pdf_base64, "files.$.template": template}}
+    )
+    return {"success": True, "pdf_data": pdf_base64, "template": template}
 
 
 app.include_router(router, prefix="/api")
