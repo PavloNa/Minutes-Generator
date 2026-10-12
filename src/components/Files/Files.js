@@ -1,8 +1,22 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import NavBar from '../NavBar/NavBar';
 import Footer from '../Footer/Footer';
-import { getUserFiles, getFile } from '../../useAPI';
+import Dialog from '../Dialog/Dialog';
+import { DocumentIcon } from '../icons';
+import { getUserFiles, getFile, restyleFile, downloadBase64Pdf } from '../../useAPI';
 import './Files.css';
+
+const formatDate = (dateString) => {
+  if (!dateString) return 'Date unknown';
+  // Backend stores naive UTC timestamps; mark them as UTC so local time is right.
+  const date = new Date(/[zZ]|[+-]\d\d:\d\d$/.test(dateString) ? dateString : dateString + 'Z');
+  return date.toLocaleString(undefined, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+};
+
+const STYLES = ['professional', 'minimal', 'modern'];
+
+const templateLabel = (template) => template ? template.charAt(0).toUpperCase() + template.slice(1) : 'Unknown';
 
 function Files() {
   const [files, setFiles] = useState([]);
@@ -10,7 +24,9 @@ function Files() {
   const [error, setError] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
   const [fileData, setFileData] = useState(null);
+  const [fileError, setFileError] = useState('');
   const [loadingFile, setLoadingFile] = useState(false);
+  const [restyling, setRestyling] = useState('');
 
   useEffect(() => {
     loadFiles();
@@ -19,33 +35,42 @@ function Files() {
   const loadFiles = async () => {
     setLoading(true);
     setError('');
-    
     const result = await getUserFiles();
-    
     if (result.success) {
-      setFiles(result.files || []);
+      // Newest first: the file you just made is the one you're looking for.
+      setFiles([...(result.files || [])].reverse());
     } else {
-      setError(result.error || 'Failed to load files');
+      setError(result.error || 'Your files couldn’t be loaded.');
     }
-    
     setLoading(false);
   };
 
   const handleOpenFile = async (file) => {
-    setLoadingFile(true);
     setSelectedFile(file);
     setFileData(null);
-    
+    setFileError('');
+    setLoadingFile(true);
     const result = await getFile(file.filename);
-    
     if (result.success) {
       setFileData(result.data);
     } else {
-      setError(result.error || 'Failed to load file');
-      setSelectedFile(null);
+      setFileError(result.error || 'This file couldn’t be loaded.');
     }
-    
     setLoadingFile(false);
+  };
+
+  const handleRestyle = async (template) => {
+    setRestyling(template);
+    setFileError('');
+    const result = await restyleFile(selectedFile.filename, template);
+    if (result.success) {
+      setFileData(result.data);
+      setSelectedFile((file) => ({ ...file, template }));
+      setFiles((list) => list.map((f) => (f.filename === selectedFile.filename ? { ...f, template } : f)));
+    } else {
+      setFileError(result.error);
+    }
+    setRestyling('');
   };
 
   const handleClosePreview = () => {
@@ -53,149 +78,111 @@ function Files() {
     setFileData(null);
   };
 
-  const handleDownload = () => {
-    if (!fileData || !selectedFile) return;
-    
-    const byteCharacters = atob(fileData);
-    const byteNumbers = new Array(byteCharacters.length);
-    for (let i = 0; i < byteCharacters.length; i++) {
-      byteNumbers[i] = byteCharacters.charCodeAt(i);
-    }
-    const byteArray = new Uint8Array(byteNumbers);
-    const blob = new Blob([byteArray], { type: 'application/pdf' });
-    
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = selectedFile.filename;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const formatDate = (dateString) => {
-    if (!dateString) return 'Unknown date';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  const getTemplateLabel = (template) => {
-    const labels = {
-      professional: '🏢 Professional',
-      minimal: '✨ Minimal',
-      modern: '🎨 Modern'
-    };
-    return labels[template] || template;
-  };
-
   return (
-    <div className="files-page-wrapper">
+    <div className="page">
       <NavBar />
-      <div className="files-container">
-        <div className="files-header">
-          <h1>📁 My Files</h1>
-          <p className="files-subtitle">View and download your generated meeting minutes</p>
+      <main className="page-main">
+        <div className="page-head files-head">
+          <div>
+            <h1 className="page-title">Files</h1>
+            <p className="page-lede">Every PDF you’ve created, newest first.</p>
+          </div>
+          {files.length > 0 && <Link to="/" className="btn btn-secondary btn-small">New minutes</Link>}
         </div>
 
-        {loading && (
-          <div className="files-loading">
-            <div className="loading-spinner"></div>
-            <p>Loading your files...</p>
-          </div>
-        )}
+        {loading && <div className="status" role="status"><span className="spinner" />Loading your files</div>}
 
-        {error && !loading && (
-          <div className="files-error">
-            <span>❌</span>
-            <p>{error}</p>
-            <button onClick={loadFiles}>Try Again</button>
-          </div>
+        {!loading && error && (
+          <p className="notice notice-error" role="alert">
+            {error}
+            <button type="button" className="btn btn-secondary btn-small notice-action" onClick={loadFiles}>Try again</button>
+          </p>
         )}
 
         {!loading && !error && files.length === 0 && (
           <div className="files-empty">
-            <div className="empty-icon">📄</div>
-            <h3>No files yet</h3>
-            <p>When you create PDF meeting minutes, they'll appear here.</p>
+            <span className="files-empty-icon"><DocumentIcon /></span>
+            <h2>No PDFs yet</h2>
+            <p>Generate minutes from a recording or transcript, then create a PDF. It will be saved here.</p>
+            <Link to="/" className="btn btn-primary">Generate your first minutes</Link>
           </div>
         )}
 
-        {!loading && files.length > 0 && (
-          <div className="files-grid">
+        {!loading && !error && files.length > 0 && (
+          <ul className="panel file-list">
             {files.map((file, index) => (
-              <div key={index} className="file-card">
-                <div className="file-icon">📄</div>
-                <div className="file-info">
-                  <h3 className="file-title">{file.title || 'Meeting Minutes'}</h3>
-                  <p className="file-name">{file.filename}</p>
-                  <div className="file-meta">
-                    <span className="file-template">{getTemplateLabel(file.template)}</span>
-                    <span className="file-date">{formatDate(file.created_at)}</span>
-                  </div>
+              <li key={file.filename + index} className="file-row stagger" style={{ '--i': index }}>
+                <span className="file-row-icon" data-template={file.template}><DocumentIcon /></span>
+                <div className="file-row-info">
+                  <span className="file-row-title">{file.title || 'Untitled meeting'}</span>
+                  <span className="file-row-meta">
+                    {formatDate(file.created_at)} · {templateLabel(file.template)} style
+                  </span>
                 </div>
-                <div className="file-actions">
-                  <button 
-                    className="file-open-btn"
-                    onClick={() => handleOpenFile(file)}
-                  >
-                    👁️ View
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* File Preview Modal */}
-        {selectedFile && (
-          <div className="modal-overlay">
-            <div className="modal-container file-preview-modal">
-              <div className="modal-header">
-                <h2>📄 {selectedFile.title || selectedFile.filename}</h2>
-                <button className="modal-close-btn" onClick={handleClosePreview}>×</button>
-              </div>
-              <div className="modal-body file-modal-body">
-                {loadingFile ? (
-                  <div className="file-loading">
-                    <div className="loading-spinner"></div>
-                    <p>Loading file...</p>
-                  </div>
-                ) : fileData ? (
-                  <div className="pdf-preview-wrapper">
-                    <iframe 
-                      src={`data:application/pdf;base64,${fileData}`}
-                      className="pdf-preview-iframe"
-                      title="PDF Preview"
-                    />
-                  </div>
-                ) : (
-                  <div className="file-error">
-                    <p>Failed to load file preview</p>
-                  </div>
-                )}
-              </div>
-              <div className="modal-footer file-modal-footer">
-                <button className="modal-cancel-btn" onClick={handleClosePreview}>
-                  Close
-                </button>
-                <button 
-                  className="download-pdf-btn" 
-                  onClick={handleDownload}
-                  disabled={!fileData}
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-small"
+                  onClick={() => handleOpenFile(file)}
+                  aria-label={`Open ${file.title || file.filename}`}
                 >
-                  📥 Download PDF
+                  Open
                 </button>
-              </div>
-            </div>
-          </div>
+              </li>
+            ))}
+          </ul>
         )}
-      </div>
+      </main>
       <Footer />
+
+      {selectedFile && (
+        <Dialog
+          title={selectedFile.title || selectedFile.filename}
+          className="dialog-wide"
+          onClose={handleClosePreview}
+          footer={
+            <>
+              <button type="button" className="btn btn-secondary" onClick={handleClosePreview}>Close</button>
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={() => downloadBase64Pdf(fileData, selectedFile.filename)}
+                disabled={!fileData}
+              >
+                Download PDF
+              </button>
+            </>
+          }
+        >
+          <div className="restyle">
+            <div className="restyle-buttons" role="group" aria-label="PDF style">
+              {STYLES.map((style) => (
+                <button
+                  key={style}
+                  type="button"
+                  className="btn btn-secondary btn-small"
+                  aria-pressed={selectedFile.template === style}
+                  disabled={!selectedFile.restylable || !!restyling || loadingFile}
+                  onClick={() => handleRestyle(style)}
+                >
+                  {restyling === style && <span className="spinner" aria-hidden="true" />}
+                  {templateLabel(style)}
+                </button>
+              ))}
+            </div>
+            {!selectedFile.restylable && (
+              <span className="field-hint">This PDF was made before styles could be changed. Generate it again to restyle it.</span>
+            )}
+          </div>
+          {fileData && fileError && <p className="notice notice-error restyle-error" role="alert">{fileError}</p>}
+          {loadingFile ? (
+            <div className="status" role="status"><span className="spinner" />Loading the PDF</div>
+          ) : fileData ? (
+            <iframe src={`data:application/pdf;base64,${fileData}`} className="pdf-frame" title="PDF preview" />
+          ) : (
+            <p className="notice notice-error" role="alert">{fileError}</p>
+          )}
+        </Dialog>
+      )}
     </div>
   );
 }

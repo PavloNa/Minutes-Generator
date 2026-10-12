@@ -1,8 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import './Login.css';
-import logo from '../../images/logo.png';
 import { login, register } from '../../useAPI';
+import Logo from '../Logo';
+
+const PASSWORD_RULES = [
+  { label: 'At least 8 characters', test: (p) => p.length >= 8 },
+  { label: 'An uppercase letter', test: (p) => /[A-Z]/.test(p) },
+  { label: 'A lowercase letter', test: (p) => /[a-z]/.test(p) },
+  { label: 'A number', test: (p) => /[0-9]/.test(p) },
+  { label: 'A symbol, like ! @ # $ %', test: (p) => /[!@#$%^&*(),.?":{}|<>]/.test(p) },
+];
+
+const isEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 
 function Login() {
   const [email, setEmail] = useState('');
@@ -11,90 +21,34 @@ function Login() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isRegister, setIsRegister] = useState(false);
   const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
+  const [emailTouched, setEmailTouched] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  // Password validation states
-  const [passwordRequirements, setPasswordRequirements] = useState({
-    minLength: false,
-    hasUpperCase: false,
-    hasLowerCase: false,
-    hasNumber: false,
-    hasSpecialChar: false
-  });
-
-  // Email validation
-  const [isEmailValid, setIsEmailValid] = useState(true);
-
-  // Validate email format
-  const validateEmail = (email) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
-
-  // Validate password requirements in real-time
-  useEffect(() => {
-    if (isRegister && password) {
-      setPasswordRequirements({
-        minLength: password.length >= 8,
-        hasUpperCase: /[A-Z]/.test(password),
-        hasLowerCase: /[a-z]/.test(password),
-        hasNumber: /[0-9]/.test(password),
-        hasSpecialChar: /[!@#$%^&*(),.?":{}|<>]/.test(password)
-      });
-    } else {
-      setPasswordRequirements({
-        minLength: false,
-        hasUpperCase: false,
-        hasLowerCase: false,
-        hasNumber: false,
-        hasSpecialChar: false
-      });
-    }
-  }, [password, isRegister]);
-
-  // Validate email on blur
-  const handleEmailBlur = () => {
-    if (email) {
-      setIsEmailValid(validateEmail(email));
-    }
-  };
+  const emailInvalid = isRegister && emailTouched && email !== '' && !isEmail(email);
+  const confirmMismatch = isRegister && confirmPassword !== '' && confirmPassword !== password;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    setLoading(true);
+    setNotice('');
 
     if (isRegister) {
-      // Validate email
-      if (!validateEmail(email)) {
-        setError('Please enter a valid email address');
-        setLoading(false);
-        return;
-      }
+      if (!isEmail(email)) return setError('Enter a valid email address.');
+      if (!PASSWORD_RULES.every((rule) => rule.test(password))) return setError('Your password is missing some of the requirements below.');
+      if (password !== confirmPassword) return setError('The two passwords don’t match.');
+    }
 
-      // Validate password requirements
-      const allRequirementsMet = Object.values(passwordRequirements).every(req => req);
-      if (!allRequirementsMet) {
-        setError('Password does not meet all requirements');
-        setLoading(false);
-        return;
-      }
-
-      // Validate password match
-      if (password !== confirmPassword) {
-        setError('Passwords do not match');
-        setLoading(false);
-        return;
-      }
-
+    setLoading(true);
+    if (isRegister) {
       const result = await register(username, password, email);
       if (result.success) {
         setIsRegister(false);
         setPassword('');
         setConfirmPassword('');
         setEmail('');
-        setError('Registration successful! Please login.');
+        setNotice('Account created. Sign in to continue.');
       } else {
         setError(result.error);
       }
@@ -102,9 +56,9 @@ function Login() {
       const result = await login(username, password);
       if (result.success) {
         navigate('/');
-      } else {
-        setError(result.error);
+        return;
       }
+      setError(result.error);
     }
     setLoading(false);
   };
@@ -114,106 +68,120 @@ function Login() {
     setPassword('');
     setConfirmPassword('');
     setEmail('');
+    setEmailTouched(false);
     setError('');
-    setIsEmailValid(true);
+    setNotice('');
   };
 
   return (
-    <div className="login-container">
-      <div className="login-box">
-        <h2>{isRegister ? 'Register' : 'Login'}</h2>
-        {error && <p className="error-message">{error}</p>}
-        <form onSubmit={handleSubmit}>
+    <main className="login">
+      <div className="login-intro">
+        <Link to="/about" className="login-brand"><Logo size={36} />Minutes Generator</Link>
+        <p className="login-lede">Turn a meeting transcript or recording into structured minutes and a PDF.</p>
+      </div>
+
+      <section className="panel panel-glass login-card" aria-labelledby="login-title">
+        <h1 id="login-title">{isRegister ? 'Create your account' : 'Sign in'}</h1>
+
+        <div aria-live="polite">
+          {error && <p className="notice notice-error">{error}</p>}
+          {notice && <p className="notice notice-success">{notice}</p>}
+        </div>
+
+        <form onSubmit={handleSubmit} noValidate>
           {isRegister && (
-            <div className="form-group">
-              <label htmlFor="email">Email</label>
+            <div className="field">
+              <label className="field-label" htmlFor="email">Email</label>
               <input
+                className="input"
                 type="email"
                 id="email"
+                autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                onBlur={handleEmailBlur}
-                placeholder="Enter your email"
-                className={!isEmailValid && email ? 'invalid-input' : ''}
+                onBlur={() => setEmailTouched(true)}
+                aria-invalid={emailInvalid}
+                aria-describedby={emailInvalid ? 'email-error' : undefined}
                 required
               />
-              {!isEmailValid && email && (
-                <span className="validation-error">Please enter a valid email address</span>
-              )}
+              {emailInvalid && <span id="email-error" className="field-error">This doesn’t look like an email address.</span>}
             </div>
           )}
-          <div className="form-group">
-            <label htmlFor="username">{isRegister ? 'Username' : 'Username or Email'}</label>
+
+          <div className="field">
+            <label className="field-label" htmlFor="username">{isRegister ? 'Username' : 'Username or email'}</label>
             <input
+              className="input"
               type="text"
               id="username"
+              autoComplete="username"
+              autoCapitalize="none"
+              spellCheck="false"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              placeholder={isRegister ? 'Enter your username' : 'Enter your username or email'}
               required
             />
           </div>
-          <div className="form-group">
-            <label htmlFor="password">Password</label>
+
+          <div className="field">
+            <label className="field-label" htmlFor="password">Password</label>
             <input
+              className="input"
               type="password"
               id="password"
+              autoComplete={isRegister ? 'new-password' : 'current-password'}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your password"
+              aria-describedby={isRegister ? 'password-rules' : undefined}
               required
             />
-            {isRegister && password && (
-              <div className="password-requirements">
-                <div className={`requirement ${passwordRequirements.minLength ? 'met' : 'unmet'}`}>
-                  <span className="icon">{passwordRequirements.minLength ? '✓' : '✗'}</span>
-                  At least 8 characters
-                </div>
-                <div className={`requirement ${passwordRequirements.hasUpperCase ? 'met' : 'unmet'}`}>
-                  <span className="icon">{passwordRequirements.hasUpperCase ? '✓' : '✗'}</span>
-                  One uppercase letter
-                </div>
-                <div className={`requirement ${passwordRequirements.hasLowerCase ? 'met' : 'unmet'}`}>
-                  <span className="icon">{passwordRequirements.hasLowerCase ? '✓' : '✗'}</span>
-                  One lowercase letter
-                </div>
-                <div className={`requirement ${passwordRequirements.hasNumber ? 'met' : 'unmet'}`}>
-                  <span className="icon">{passwordRequirements.hasNumber ? '✓' : '✗'}</span>
-                  One number
-                </div>
-                <div className={`requirement ${passwordRequirements.hasSpecialChar ? 'met' : 'unmet'}`}>
-                  <span className="icon">{passwordRequirements.hasSpecialChar ? '✓' : '✗'}</span>
-                  One special character (!@#$%^&*...)
-                </div>
-              </div>
+            {isRegister && (
+              <ul id="password-rules" className="password-rules">
+                {PASSWORD_RULES.map((rule) => {
+                  const met = rule.test(password);
+                  return (
+                    <li key={rule.label} className={met ? 'met' : ''}>
+                      <span aria-hidden="true" className="rule-mark">{met ? '✓' : '·'}</span>
+                      {rule.label}
+                      <span className="visually-hidden">{met ? ' (done)' : ' (missing)'}</span>
+                    </li>
+                  );
+                })}
+              </ul>
             )}
           </div>
+
           {isRegister && (
-            <div className="form-group">
-              <label htmlFor="confirmPassword">Confirm Password</label>
+            <div className="field">
+              <label className="field-label" htmlFor="confirmPassword">Confirm password</label>
               <input
+                className="input"
                 type="password"
                 id="confirmPassword"
+                autoComplete="new-password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Confirm your password"
+                aria-invalid={confirmMismatch}
                 required
               />
+              {confirmMismatch && <span className="field-error">Passwords don’t match yet.</span>}
             </div>
           )}
-          {!isRegister && <p>Forgot your password? <a href="/forgot-password">Reset</a></p>}
-          <button type="submit" className="login-button" disabled={loading}>
-            {loading ? 'Please wait...' : (isRegister ? 'Register' : 'Login')}
+
+          <button type="submit" className="btn btn-primary login-submit" disabled={loading}>
+            {loading && <span className="spinner" aria-hidden="true" />}
+            {loading ? (isRegister ? 'Creating account' : 'Signing in') : (isRegister ? 'Create account' : 'Sign in')}
           </button>
         </form>
-        <p>
-          {isRegister ? 'Already have an account? ' : "Don't have an account? "}
-          <span className="toggle-link" onClick={toggleMode}>
-            {isRegister ? 'Login' : 'Sign up'}
-          </span>
+
+        <p className="login-switch">
+          {isRegister ? 'Already have an account?' : 'New here?'}
+          <button type="button" className="link-btn" onClick={toggleMode}>
+            {isRegister ? 'Sign in' : 'Create an account'}
+          </button>
         </p>
-      </div>
-    </div>
+      </section>
+    </main>
   );
 }
 

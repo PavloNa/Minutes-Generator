@@ -304,3 +304,35 @@ export const getFile = async (filename) => {
     return { success: false, error: 'Network error. Please try again.' };
   }
 };
+export const restyleFile = async (filename, template) => {
+  const token = getStoredToken();
+  if (!token) return { success: false, error: 'Not logged in' };
+
+  try {
+    const formData = new FormData();
+    formData.append('token', token);
+    formData.append('filename', filename);
+    formData.append('template', template);
+
+    const response = await fetch(`${API_BASE_URL}/restyle_file`, { method: 'POST', body: formData });
+    const data = await response.json();
+
+    if (data.success) {
+      return { success: true, data: data.pdf_data, template: data.template };
+    }
+    return { success: false, error: data.message || 'Failed to change the style' };
+  } catch (error) {
+    console.error('Restyle file error:', error);
+    return { success: false, error: 'Network error. Please try again.' };
+  }
+};
+
+export const downloadBase64Pdf = (base64, filename) => {
+  const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+  const url = URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' }));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename || 'meeting-minutes.pdf';
+  a.click();
+  URL.revokeObjectURL(url);
+};

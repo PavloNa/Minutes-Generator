@@ -1,14 +1,48 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import NavBar from '../NavBar/NavBar';
 import Footer from '../Footer/Footer';
 import Upload from '../Upload/Upload';
-import { getUser, getPdfTemplates, createPdf, getUserFiles } from '../../useAPI';
+import Dialog from '../Dialog/Dialog';
+import { CloseIcon } from '../icons';
+import { getUser, getPdfTemplates, createPdf, getUserFiles, downloadBase64Pdf } from '../../useAPI';
 import './Main.css';
+
+const clone = (value) => JSON.parse(JSON.stringify(value));
+
+const HUES = ['', 'var(--c-blue)', 'var(--c-violet)', 'var(--c-teal)', 'var(--c-amber)', 'var(--c-pink)'];
+
+function Section({ no, title, onAdd, addLabel, children }) {
+  return (
+    <section className="sheet-section stagger" style={{ '--i': no, '--hue': HUES[no] }}>
+      <div className="sheet-section-head">
+        <span className="section-no">{String(no).padStart(2, '0')}</span>
+        <h2>{title}</h2>
+        {onAdd && (
+          <button type="button" className="btn btn-ghost btn-small sheet-add" onClick={onAdd}>
+            + {addLabel}
+          </button>
+        )}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+const Empty = () => <p className="sheet-empty">None recorded.</p>;
+
+function RemoveButton({ label, onClick }) {
+  return (
+    <button type="button" className="icon-btn" onClick={onClick} aria-label={label}>
+      <CloseIcon />
+    </button>
+  );
+}
 
 function Main() {
   const [hasApiKey, setHasApiKey] = useState(true);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [generatedMinutes, setGeneratedMinutes] = useState(null);
   const [templates, setTemplates] = useState([]);
   const [selectedTemplate, setSelectedTemplate] = useState('professional');
@@ -20,10 +54,8 @@ function Main() {
   const [editedMinutes, setEditedMinutes] = useState(null);
   const [filesCount, setFilesCount] = useState(0);
   const [userStats, setUserStats] = useState(null);
-  // Modal states
   const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [showPdfModal, setShowPdfModal] = useState(false);
-  const navigate = useNavigate();
 
   useEffect(() => {
     const initialize = async () => {
@@ -32,8 +64,10 @@ function Main() {
         const apiKey = userResult.ai_config?.api_key;
         setHasApiKey(apiKey && apiKey.trim() !== '');
         setUserStats(userResult.stats);
+      } else {
+        setLoadError(userResult.error || 'Your account couldn’t be loaded.');
       }
-      
+
       const templateResult = await getPdfTemplates();
       if (templateResult.success) {
         setTemplates(templateResult.templates);
@@ -43,7 +77,7 @@ function Main() {
       if (filesResult.success) {
         setFilesCount(filesResult.files?.length || 0);
       }
-      
+
       setLoading(false);
     };
     initialize();
@@ -51,7 +85,7 @@ function Main() {
 
   const handleMinutesGenerated = (minutes) => {
     setGeneratedMinutes(minutes);
-    setEditedMinutes(JSON.parse(JSON.stringify(minutes)));
+    setEditedMinutes(clone(minutes));
     setPdfData(null);
     setPdfFilename('');
     setPdfError('');
@@ -70,7 +104,7 @@ function Main() {
   };
 
   const handleStartEdit = () => {
-    setEditedMinutes(JSON.parse(JSON.stringify(generatedMinutes)));
+    setEditedMinutes(clone(generatedMinutes));
     setIsEditing(true);
   };
 
@@ -80,7 +114,7 @@ function Main() {
   };
 
   const handleCancelEdit = () => {
-    setEditedMinutes(JSON.parse(JSON.stringify(generatedMinutes)));
+    setEditedMinutes(clone(generatedMinutes));
     setIsEditing(false);
   };
 
@@ -96,19 +130,11 @@ function Main() {
     });
   };
 
-  const updateDiscussionPoint = (index, key, value) => {
+  const updateObjectItem = (field, index, key, value) => {
     setEditedMinutes(prev => {
-      const newPoints = [...prev.discussion_points];
-      newPoints[index] = { ...newPoints[index], [key]: value };
-      return { ...prev, discussion_points: newPoints };
-    });
-  };
-
-  const updateActionItem = (index, key, value) => {
-    setEditedMinutes(prev => {
-      const newItems = [...prev.action_items];
+      const newItems = [...prev[field]];
       newItems[index] = { ...newItems[index], [key]: value };
-      return { ...prev, action_items: newItems };
+      return { ...prev, [field]: newItems };
     });
   };
 
@@ -119,32 +145,8 @@ function Main() {
     }));
   };
 
-  const addDecision = () => {
-    setEditedMinutes(prev => ({
-      ...prev,
-      decisions: [...(prev.decisions || []), '']
-    }));
-  };
-
-  const addNextStep = () => {
-    setEditedMinutes(prev => ({
-      ...prev,
-      next_steps: [...(prev.next_steps || []), '']
-    }));
-  };
-
-  const addDiscussionPoint = () => {
-    setEditedMinutes(prev => ({
-      ...prev,
-      discussion_points: [...(prev.discussion_points || []), { topic: '', details: '' }]
-    }));
-  };
-
-  const addActionItem = () => {
-    setEditedMinutes(prev => ({
-      ...prev,
-      action_items: [...(prev.action_items || []), { task: '', owner: '', due_date: '' }]
-    }));
+  const addItem = (field, empty) => {
+    setEditedMinutes(prev => ({ ...prev, [field]: [...(prev[field] || []), empty] }));
   };
 
   const handleOpenTemplateModal = () => {
@@ -154,27 +156,26 @@ function Main() {
 
   const handleConfirmTemplate = async () => {
     if (!generatedMinutes) return;
-    
+
     setCreatingPdf(true);
     setPdfError('');
-    
-    const filename = `meeting-minutes-${Date.now()}.pdf`;
-    
+
     const result = await createPdf({
       template: selectedTemplate,
       minutes: generatedMinutes,
-      filename: filename
+      filename: `meeting-minutes-${Date.now()}.pdf`
     });
-    
+
     if (result.success) {
       setPdfData(result.pdfData);
       setPdfFilename(result.filename);
       setShowTemplateModal(false);
       setShowPdfModal(true);
+      setFilesCount(count => count + 1);
     } else {
-      setPdfError(result.error || 'Failed to create PDF');
+      setPdfError(result.error || 'The PDF couldn’t be created. Try again.');
     }
-    
+
     setCreatingPdf(false);
   };
 
@@ -188,404 +189,285 @@ function Main() {
     setShowTemplateModal(false);
   };
 
-  const handleDownloadPdf = () => {
-    if (!pdfData) return;
-    
-    const byteCharacters = atob(pdfData);
-    const byteNumbers = new Array(byteCharacters.length);
-    for (let i = 0; i < byteCharacters.length; i++) {
-      byteNumbers[i] = byteCharacters.charCodeAt(i);
-    }
-    const byteArray = new Uint8Array(byteNumbers);
-    const blob = new Blob([byteArray], { type: 'application/pdf' });
-    
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = pdfFilename || 'meeting-minutes.pdf';
-    a.click();
-    URL.revokeObjectURL(url);
-  };
+  const m = isEditing ? editedMinutes : generatedMinutes;
+
+  const renderUpload = () => (
+    <>
+      <div className="hero">
+        <h1 className="hero-title">Turn meetings into <span className="grad">clean minutes</span></h1>
+        <p className="hero-lede">
+          Upload a recording or paste a transcript. Check the draft, fix what’s off, and export a PDF.
+        </p>
+      </div>
+
+      {loadError && (
+        <p className="notice notice-error main-notice" role="alert">
+          {loadError}
+          <button type="button" className="btn btn-secondary btn-small notice-action" onClick={() => window.location.reload()}>
+            Reload
+          </button>
+        </p>
+      )}
+
+      {!hasApiKey && !loadError && (
+        <p className="notice notice-warn main-notice">
+          Add an API key before generating minutes. Groq’s is free.
+          <Link to="/profile" className="btn btn-secondary btn-small notice-action">Open settings</Link>
+        </p>
+      )}
+
+      <Upload disabled={!hasApiKey} onMinutesGenerated={handleMinutesGenerated} />
+
+      {(filesCount > 0 || userStats?.characters_processed > 0) && (
+        <section className="usage" aria-label="Your usage">
+          <Link to="/files" className="usage-tile" style={{ '--hue': 'var(--c-blue)' }}>
+            <span className="usage-value">{filesCount}</span>
+            <span className="usage-label">{filesCount === 1 ? 'PDF saved' : 'PDFs saved'} · open files</span>
+          </Link>
+          <div className="usage-tile" style={{ '--hue': 'var(--c-violet)' }}>
+            <span className="usage-value">{(userStats?.characters_processed || 0).toLocaleString()}</span>
+            <span className="usage-label">characters processed</span>
+          </div>
+          <div className="usage-tile" style={{ '--hue': 'var(--c-teal)' }}>
+            <span className="usage-value">{Math.round((userStats?.audio_seconds_processed || 0) / 60)}</span>
+            <span className="usage-label">audio minutes</span>
+          </div>
+        </section>
+      )}
+    </>
+  );
+
+  const renderMinutes = () => (
+    <>
+      <div className="sheet-toolbar">
+        <p className="sheet-status">{isEditing ? 'Editing minutes' : 'Draft minutes, not saved yet'}</p>
+        <div className="sheet-toolbar-actions">
+          {isEditing ? (
+            <>
+              <button type="button" className="btn btn-secondary btn-small" onClick={handleCancelEdit}>Cancel</button>
+              <button type="button" className="btn btn-primary btn-small" onClick={handleSaveEdit}>Save changes</button>
+            </>
+          ) : (
+            <>
+              <button type="button" className="btn btn-ghost btn-small" onClick={handleNewTranscript}>Start over</button>
+              <button type="button" className="btn btn-secondary btn-small" onClick={handleStartEdit}>Edit</button>
+            </>
+          )}
+        </div>
+      </div>
+
+      <article className={`panel panel-glass sheet ${isEditing ? 'is-editing' : ''}`}>
+        <header className="sheet-head stagger" style={{ '--i': 0 }}>
+          {isEditing ? (
+            <div className="field">
+              <label className="field-label" htmlFor="m-title">Title</label>
+              <input id="m-title" className="input sheet-title-input" value={m.title || ''}
+                onChange={(e) => updateField('title', e.target.value)} />
+            </div>
+          ) : (
+            <h1 className="sheet-title">{m.title || 'Untitled meeting'}</h1>
+          )}
+
+          {isEditing ? (
+            <div className="sheet-meta-edit">
+              <div className="field">
+                <label className="field-label" htmlFor="m-date">Date</label>
+                <input id="m-date" className="input" value={m.date || ''}
+                  onChange={(e) => updateField('date', e.target.value)} />
+              </div>
+              <div className="field">
+                <label className="field-label" htmlFor="m-attendees">Attendees</label>
+                <input id="m-attendees" className="input" value={m.attendees?.join(', ') || ''}
+                  aria-describedby="m-attendees-hint"
+                  onChange={(e) => updateField('attendees', e.target.value.split(',').map(s => s.trim()).filter(Boolean))} />
+                <span id="m-attendees-hint" className="field-hint">Separate names with commas.</span>
+              </div>
+            </div>
+          ) : (
+            <dl className="sheet-meta">
+              <div><dt>Date</dt><dd>{m.date || 'Not stated'}</dd></div>
+              <div><dt>Attendees</dt><dd>{m.attendees?.length ? m.attendees.join(', ') : 'Not stated'}</dd></div>
+            </dl>
+          )}
+        </header>
+
+        <Section no={1} title="Summary">
+          {isEditing ? (
+            <textarea className="input" rows={4} aria-label="Summary" value={m.summary || ''}
+              onChange={(e) => updateField('summary', e.target.value)} />
+          ) : (
+            m.summary ? <p className="sheet-text">{m.summary}</p> : <Empty />
+          )}
+        </Section>
+
+        <Section no={2} title="Discussion"
+          onAdd={isEditing && (() => addItem('discussion_points', { topic: '', details: '' }))} addLabel="Add topic">
+          {isEditing ? (
+            m.discussion_points?.map((point, i) => (
+              <div key={i} className="edit-row">
+                <div className="edit-stack">
+                  <input className="input" aria-label={`Topic ${i + 1}`} placeholder="Topic" value={point.topic}
+                    onChange={(e) => updateObjectItem('discussion_points', i, 'topic', e.target.value)} />
+                  <textarea className="input" rows={2} aria-label={`Topic ${i + 1} details`} placeholder="What was said"
+                    value={point.details} onChange={(e) => updateObjectItem('discussion_points', i, 'details', e.target.value)} />
+                </div>
+                <RemoveButton label={`Remove topic ${i + 1}`} onClick={() => removeArrayItem('discussion_points', i)} />
+              </div>
+            ))
+          ) : m.discussion_points?.length ? (
+            <div className="topics">
+              {m.discussion_points.map((point, i) => (
+                <div key={i} className="topic">
+                  <h3>{point.topic}</h3>
+                  <p className="sheet-text">{point.details}</p>
+                </div>
+              ))}
+            </div>
+          ) : <Empty />}
+        </Section>
+
+        <Section no={3} title="Decisions" onAdd={isEditing && (() => addItem('decisions', ''))} addLabel="Add decision">
+          {isEditing ? (
+            m.decisions?.map((decision, i) => (
+              <div key={i} className="edit-row">
+                <input className="input" aria-label={`Decision ${i + 1}`} value={decision}
+                  onChange={(e) => updateArrayItem('decisions', i, e.target.value)} />
+                <RemoveButton label={`Remove decision ${i + 1}`} onClick={() => removeArrayItem('decisions', i)} />
+              </div>
+            ))
+          ) : m.decisions?.length ? (
+            <ul className="sheet-list">{m.decisions.map((d, i) => <li key={i}>{d}</li>)}</ul>
+          ) : <Empty />}
+        </Section>
+
+        <Section no={4} title="Action items"
+          onAdd={isEditing && (() => addItem('action_items', { task: '', owner: '', due_date: '' }))} addLabel="Add action">
+          {isEditing ? (
+            m.action_items?.map((item, i) => (
+              <div key={i} className="edit-row">
+                <div className="edit-action">
+                  <input className="input" aria-label={`Action ${i + 1} task`} placeholder="Task" value={item.task}
+                    onChange={(e) => updateObjectItem('action_items', i, 'task', e.target.value)} />
+                  <input className="input" aria-label={`Action ${i + 1} owner`} placeholder="Owner" value={item.owner}
+                    onChange={(e) => updateObjectItem('action_items', i, 'owner', e.target.value)} />
+                  <input className="input" aria-label={`Action ${i + 1} due date`} placeholder="Due" value={item.due_date || ''}
+                    onChange={(e) => updateObjectItem('action_items', i, 'due_date', e.target.value)} />
+                </div>
+                <RemoveButton label={`Remove action ${i + 1}`} onClick={() => removeArrayItem('action_items', i)} />
+              </div>
+            ))
+          ) : m.action_items?.length ? (
+            <table className="actions-table">
+              <thead><tr><th scope="col">Task</th><th scope="col">Owner</th><th scope="col">Due</th></tr></thead>
+              <tbody>
+                {m.action_items.map((item, i) => (
+                  <tr key={i}>
+                    <td data-label="Task">{item.task}</td>
+                    <td data-label="Owner">{item.owner || 'Unassigned'}</td>
+                    <td data-label="Due">{item.due_date || 'No date'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : <Empty />}
+        </Section>
+
+        <Section no={5} title="Next steps" onAdd={isEditing && (() => addItem('next_steps', ''))} addLabel="Add step">
+          {isEditing ? (
+            m.next_steps?.map((step, i) => (
+              <div key={i} className="edit-row">
+                <input className="input" aria-label={`Next step ${i + 1}`} value={step}
+                  onChange={(e) => updateArrayItem('next_steps', i, e.target.value)} />
+                <RemoveButton label={`Remove next step ${i + 1}`} onClick={() => removeArrayItem('next_steps', i)} />
+              </div>
+            ))
+          ) : m.next_steps?.length ? (
+            <ul className="sheet-list">{m.next_steps.map((s, i) => <li key={i}>{s}</li>)}</ul>
+          ) : <Empty />}
+        </Section>
+      </article>
+
+      {!isEditing && (
+        <div className="sheet-footer">
+          <button type="button" className="btn btn-primary" onClick={handleOpenTemplateModal}>Create PDF</button>
+        </div>
+      )}
+    </>
+  );
 
   return (
-    <div className="main-page-wrapper">
+    <div className="page">
       <NavBar />
 
       {loading ? (
-        <div className="loading-container">
-          <div className="loading-spinner"></div>
-          <p className="loading-text">Loading...</p>
-        </div>
+        <div className="status page-main" role="status"><span className="spinner" />Loading your workspace</div>
       ) : (
-        <>
-          {!hasApiKey && (
-            <div className="api-setup-banner">
-              <span className="banner-icon">⚠️</span>
-              <p>You haven't configured your AI API key yet.</p>
-              <button onClick={() => navigate('/profile')}>Set up in Profile →</button>
-            </div>
-          )}
-
-          {!generatedMinutes && (
-        <div className="main-content">
-          <Upload disabled={!hasApiKey} onMinutesGenerated={handleMinutesGenerated} />
-          {(filesCount > 0 || userStats?.characters_processed > 0) && (
-            <div className="stats-banner" onClick={() => navigate('/files')}>
-              <div className="stats-icon">📊</div>
-              <div className="stats-content">
-                <div className="stats-item">
-                  <span className="stats-value highlight">{filesCount}</span>
-                  <span className="stats-label">PDFs Created</span>
-                </div>
-                <div className="stats-divider"></div>
-                <div className="stats-item">
-                  <span className="stats-value">{userStats?.characters_processed?.toLocaleString() || 0}</span>
-                  <span className="stats-label">Characters Processed</span>
-                </div>
-                <div className="stats-divider"></div>
-                <div className="stats-item">
-                  <span className="stats-value">{Math.round((userStats?.audio_seconds_processed || 0) / 60)}</span>
-                  <span className="stats-label">Audio Minutes</span>
-                </div>
-              </div>
-              <div className="stats-action">View Files →</div>
-            </div>
-          )}
-        </div>
-      )}
-      
-      {generatedMinutes && !showTemplateModal && !showPdfModal && (
-        <div className="main-content">
-          <div className="minutes-result">
-            <div className="minutes-header">
-              {isEditing ? (
-                <input
-                  type="text"
-                  className="edit-title-input"
-                  value={editedMinutes?.title || ''}
-                  onChange={(e) => updateField('title', e.target.value)}
-                  placeholder="Meeting Title"
-                />
-              ) : (
-                <h2>📋 {generatedMinutes.title || 'Generated Meeting Minutes'}</h2>
-              )}
-              <div className="header-actions">
-                {!isEditing && (
-                  <button className="edit-btn" onClick={handleStartEdit}>
-                    ✏️ Edit
-                  </button>
-                )}
-                <button className="new-transcript-btn" onClick={handleNewTranscript}>
-                  + New Transcript
-                </button>
-              </div>
-            </div>
-            
-            {isEditing && (
-              <div className="edit-actions-top">
-                <button className="save-edit-btn" onClick={handleSaveEdit}>✅ Save Changes</button>
-                <button className="cancel-edit-btn" onClick={handleCancelEdit}>Cancel</button>
-              </div>
-            )}
-            
-            <div className="minutes-content">
-              <div className="minutes-meta">
-                {isEditing ? (
-                  <>
-                    <label className="edit-label">Date:</label>
-                    <input
-                      type="text"
-                      className="edit-input"
-                      value={editedMinutes?.date || ''}
-                      onChange={(e) => updateField('date', e.target.value)}
-                      placeholder="Meeting Date"
-                    />
-                    <label className="edit-label">Attendees (comma-separated):</label>
-                    <input
-                      type="text"
-                      className="edit-input"
-                      value={editedMinutes?.attendees?.join(', ') || ''}
-                      onChange={(e) => updateField('attendees', e.target.value.split(',').map(s => s.trim()).filter(s => s))}
-                      placeholder="e.g., John, Sarah, Mike"
-                    />
-                  </>
-                ) : (
-                  <>
-                    <p><strong>Date:</strong> {generatedMinutes.date || 'Not specified'}</p>
-                    {generatedMinutes.attendees?.length > 0 && (
-                      <p><strong>Attendees:</strong> {generatedMinutes.attendees.join(', ')}</p>
-                    )}
-                  </>
-                )}
-              </div>
-
-              <div className="minutes-section">
-                <h3>Summary</h3>
-                {isEditing ? (
-                  <textarea
-                    className="edit-textarea"
-                    value={editedMinutes?.summary || ''}
-                    onChange={(e) => updateField('summary', e.target.value)}
-                    placeholder="Meeting summary..."
-                    rows={4}
-                  />
-                ) : (
-                  generatedMinutes.summary && <p>{generatedMinutes.summary}</p>
-                )}
-              </div>
-
-              <div className="minutes-section">
-                <div className="section-header">
-                  <h3>Discussion Points</h3>
-                  {isEditing && (
-                    <button className="add-item-btn" onClick={addDiscussionPoint}>+ Add</button>
-                  )}
-                </div>
-                {isEditing ? (
-                  editedMinutes?.discussion_points?.map((point, i) => (
-                    <div key={i} className="edit-discussion-point">
-                      <input
-                        type="text"
-                        className="edit-input"
-                        value={point.topic}
-                        onChange={(e) => updateDiscussionPoint(i, 'topic', e.target.value)}
-                        placeholder="Topic"
-                      />
-                      <textarea
-                        className="edit-textarea-small"
-                        value={point.details}
-                        onChange={(e) => updateDiscussionPoint(i, 'details', e.target.value)}
-                        placeholder="Details"
-                        rows={2}
-                      />
-                      <button className="remove-item-btn" onClick={() => removeArrayItem('discussion_points', i)}>×</button>
-                    </div>
-                  ))
-                ) : (
-                  generatedMinutes.discussion_points?.map((point, i) => (
-                    <div key={i} className="discussion-point">
-                      <h4>{point.topic}</h4>
-                      <p>{point.details}</p>
-                    </div>
-                  ))
-                )}
-              </div>
-
-              <div className="minutes-section">
-                <div className="section-header">
-                  <h3>Decisions Made</h3>
-                  {isEditing && (
-                    <button className="add-item-btn" onClick={addDecision}>+ Add</button>
-                  )}
-                </div>
-                {isEditing ? (
-                  editedMinutes?.decisions?.map((decision, i) => (
-                    <div key={i} className="edit-list-item">
-                      <input
-                        type="text"
-                        className="edit-input"
-                        value={decision}
-                        onChange={(e) => updateArrayItem('decisions', i, e.target.value)}
-                        placeholder="Decision"
-                      />
-                      <button className="remove-item-btn" onClick={() => removeArrayItem('decisions', i)}>×</button>
-                    </div>
-                  ))
-                ) : (
-                  generatedMinutes.decisions?.length > 0 && (
-                    <ul>
-                      {generatedMinutes.decisions.map((decision, i) => (
-                        <li key={i}>{decision}</li>
-                      ))}
-                    </ul>
-                  )
-                )}
-              </div>
-
-              <div className="minutes-section">
-                <div className="section-header">
-                  <h3>Action Items</h3>
-                  {isEditing && (
-                    <button className="add-item-btn" onClick={addActionItem}>+ Add</button>
-                  )}
-                </div>
-                {isEditing ? (
-                  editedMinutes?.action_items?.map((item, i) => (
-                    <div key={i} className="edit-action-item">
-                      <input
-                        type="text"
-                        className="edit-input"
-                        value={item.task}
-                        onChange={(e) => updateActionItem(i, 'task', e.target.value)}
-                        placeholder="Task"
-                      />
-                      <input
-                        type="text"
-                        className="edit-input-small"
-                        value={item.owner}
-                        onChange={(e) => updateActionItem(i, 'owner', e.target.value)}
-                        placeholder="Owner"
-                      />
-                      <input
-                        type="text"
-                        className="edit-input-small"
-                        value={item.due_date || ''}
-                        onChange={(e) => updateActionItem(i, 'due_date', e.target.value)}
-                        placeholder="Due Date"
-                      />
-                      <button className="remove-item-btn" onClick={() => removeArrayItem('action_items', i)}>×</button>
-                    </div>
-                  ))
-                ) : (
-                  generatedMinutes.action_items?.length > 0 && (
-                    <div className="action-items">
-                      {generatedMinutes.action_items.map((item, i) => (
-                        <div key={i} className="action-item">
-                          <span className="action-task">{item.task}</span>
-                          <span className="action-owner">👤 {item.owner}</span>
-                          {item.due_date && <span className="action-due">📅 {item.due_date}</span>}
-                        </div>
-                      ))}
-                    </div>
-                  )
-                )}
-              </div>
-
-              <div className="minutes-section">
-                <div className="section-header">
-                  <h3>Next Steps</h3>
-                  {isEditing && (
-                    <button className="add-item-btn" onClick={addNextStep}>+ Add</button>
-                  )}
-                </div>
-                {isEditing ? (
-                  editedMinutes?.next_steps?.map((step, i) => (
-                    <div key={i} className="edit-list-item">
-                      <input
-                        type="text"
-                        className="edit-input"
-                        value={step}
-                        onChange={(e) => updateArrayItem('next_steps', i, e.target.value)}
-                        placeholder="Next step"
-                      />
-                      <button className="remove-item-btn" onClick={() => removeArrayItem('next_steps', i)}>×</button>
-                    </div>
-                  ))
-                ) : (
-                  generatedMinutes.next_steps?.length > 0 && (
-                    <ul>
-                      {generatedMinutes.next_steps.map((step, i) => (
-                        <li key={i}>{step}</li>
-                      ))}
-                    </ul>
-                  )
-                )}
-              </div>
-            </div>
-
-            {!isEditing && (
-              <div className="minutes-actions">
-                <button className="create-pdf-btn" onClick={handleOpenTemplateModal}>
-                  Create PDF
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
+        <main className="page-main">
+          {generatedMinutes ? renderMinutes() : renderUpload()}
+        </main>
       )}
 
       {showTemplateModal && (
-        <div className="modal-overlay">
-          <div className="modal-container template-modal">
-            <div className="modal-header">
-              <h2>📄 Select PDF Template</h2>
-              <button className="modal-close-btn" onClick={() => setShowTemplateModal(false)}>×</button>
-            </div>
-            <div className="modal-body">
-              <p className="modal-description">Choose a template style for your meeting minutes PDF</p>
-              <div className="template-grid">
-                {templates.map((template) => (
-                  <button
-                    key={template.id}
-                    className={`template-card ${selectedTemplate === template.id ? 'selected' : ''}`}
-                    onClick={() => setSelectedTemplate(template.id)}
-                  >
-                    <div className="template-preview" data-template={template.id}>
-                      <div className="preview-header"></div>
-                      <div className="preview-line"></div>
-                      <div className="preview-line short"></div>
-                      <div className="preview-line"></div>
-                    </div>
-                    <span className="template-card-name">{template.name}</span>
-                    <span className="template-card-desc">{template.description}</span>
-                  </button>
-                ))}
-              </div>
-              {pdfError && (
-                <div className="pdf-error">
-                  ❌ {pdfError}
-                </div>
-              )}
-            </div>
-            <div className="modal-footer">
-              <button className="modal-cancel-btn" onClick={() => setShowTemplateModal(false)}>
-                Cancel
+        <Dialog
+          title="Choose a PDF style"
+          onClose={() => setShowTemplateModal(false)}
+          footer={
+            <>
+              <button type="button" className="btn btn-secondary" onClick={() => setShowTemplateModal(false)}>Cancel</button>
+              <button type="button" className="btn btn-primary" onClick={handleConfirmTemplate} disabled={creatingPdf || !templates.length}>
+                {creatingPdf && <span className="spinner" aria-hidden="true" />}
+                {creatingPdf ? 'Creating PDF' : 'Create PDF'}
               </button>
-              <button 
-                className="modal-confirm-btn" 
-                onClick={handleConfirmTemplate}
-                disabled={creatingPdf}
-              >
-                {creatingPdf ? (
-                  <>
-                    <span className="spinner"></span>
-                    Creating...
-                  </>
-                ) : (
-                  'Confirm & Create'
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
+            </>
+          }
+        >
+          {templates.length ? (
+            <fieldset className="templates">
+              <legend className="visually-hidden">PDF style</legend>
+              {templates.map((template) => (
+                <label key={template.id} className="template">
+                  <input
+                    type="radio"
+                    name="template"
+                    className="visually-hidden"
+                    value={template.id}
+                    checked={selectedTemplate === template.id}
+                    onChange={() => setSelectedTemplate(template.id)}
+                  />
+                  <span className="template-thumb" data-template={template.id} aria-hidden="true">
+                    <span className="t-title" /><span className="t-rule" />
+                    <span className="t-line" /><span className="t-line short" /><span className="t-line" />
+                  </span>
+                  <span className="template-name">{template.name}</span>
+                  <span className="template-desc">{template.description}</span>
+                </label>
+              ))}
+            </fieldset>
+          ) : (
+            <p className="notice notice-error">The PDF styles couldn’t be loaded. Close this and try again.</p>
+          )}
+          {pdfError && <p className="notice notice-error template-error" role="alert">{pdfError}</p>}
+        </Dialog>
       )}
 
       {showPdfModal && pdfData && (
-        <div className="modal-overlay">
-          <div className="modal-container pdf-modal">
-            <div className="modal-header">
-              <h2>📄 Your PDF is Ready</h2>
-              <button className="modal-close-btn" onClick={handleBackToEdit}>×</button>
-            </div>
-            <div className="modal-body pdf-modal-body">
-              <div className="pdf-preview-wrapper">
-                <iframe 
-                  src={`data:application/pdf;base64,${pdfData}`}
-                  className="pdf-preview-iframe"
-                  title="PDF Preview"
-                />
-              </div>
-            </div>
-            <div className="modal-footer pdf-modal-footer">
-              <div className="pdf-footer-left">
-                <button className="modal-back-btn" onClick={handleBackToTemplates}>
-                  ← Change Template
-                </button>
-                <button className="modal-back-btn" onClick={handleBackToEdit}>
-                  ✏️ Edit Data
-                </button>
-              </div>
-              <div className="pdf-footer-right">
-                <span className="pdf-saved-badge">✅ Saved to your files</span>
-                <button className="download-pdf-btn" onClick={handleDownloadPdf}>
-                  📥 Download PDF
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-        </>
+        <Dialog
+          title="Your PDF is ready"
+          className="dialog-wide"
+          onClose={handleBackToEdit}
+          footer={
+            <>
+              <button type="button" className="btn btn-ghost" onClick={handleBackToTemplates}>Change style</button>
+              <button type="button" className="btn btn-ghost" onClick={handleBackToEdit}>Back to minutes</button>
+              <span className="pdf-saved">Saved to your files</span>
+              <button type="button" className="btn btn-primary" onClick={() => downloadBase64Pdf(pdfData, pdfFilename)}>
+                Download PDF
+              </button>
+            </>
+          }
+        >
+          <iframe src={`data:application/pdf;base64,${pdfData}`} className="pdf-frame" title="PDF preview" />
+        </Dialog>
       )}
 
       {!loading && <Footer />}
